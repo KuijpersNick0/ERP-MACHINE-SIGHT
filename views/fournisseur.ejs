@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css"/>
+    <title>ERP Machine Sight</title>
+</head>
+<body>
+    <h1> ERP </h1>
+    <h2> Liste Fournisseur </h2>
+    <a class ="bouton" href="/fournisseurs/projet">Liste projets</a>
+    <a class ="bouton" href="/fournisseurs/article">Liste articles</a>
+    <a class ="bouton" href="/fournisseurs/bonCommande">Liste bons commande</a>
+    <a class ="bouton" href="/fournisseurs/nomenclature">Liste nomenclatures</a>
+    <a class ="bouton" href="/fournisseurs/ajoutFournisseur">Ajouter fournisseur</a>
+
+    <form style="padding-left: 150pt; position: relative; bottom: 60px; left: 750px; right: 40px;" action ="/fournisseurs/connection" method="POST" onsubmit="required();">
+        <div class="result" id="ajout-validation"></div>
+        <input placeholder="Entrez pseudo" id="pseudo" type="text" name="pseudo"/>   
+        <button> Sauver </button>
+    </form>
+    <script type="text/javascript">  
+        function required(){
+            let elt = document.getElementById("ajout-validation");
+            let newElt = document.getElementById("pseudo").value;
+            if(newElt==""){
+                elt.innerHTML = "Complétez s'il vous plait";
+                return false;
+            }
+            else{                
+                return true;
+            }
+        }
+    </script>
+
+
+    
+    <label for="selectionRecherche">Choose search column: </label>
+    <select name="selectionRecherche" id="selectionRecherche">
+        <label>Choissir colonne de recherche</label>
+        <option value="1">listeFournisseur</option>
+        <option value="2">idFournisseur</option>
+        <option value="3">societe</option>
+        <option value="4">nomPrenom</option>
+        <option value="5">adresse1</option>
+        <option value="7">cpostal</option>
+        <option value="10">telephone</option>
+        <option value="14">nTVA</option>
+    </select>
+    <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for..">
+
+    <div id="reaffiche"></div>
+
+    <table id="myTable">   
+        <tr class="header">
+            <th>Delete</th>
+            <th scope="col">listeFournisseur</th>
+            <th scope="col">idFournisseur</th>
+            <th scope="col">societe</th>
+            <th scope="col">nomPrenom</th>
+            <th scope="col">adresse1</th>
+            <th scope="col">adresse2</th>
+            <th scope="col">cpostal</th>
+            <th scope="col">ville</th>
+            <th scope="col">pays</th>
+            <th scope="col">telephone</th>
+            <th scope="col">portable</th>
+            <th scope="col">site</th>
+            <th scope="col">e_mail</th>
+            <th scope="col">nTVA</th>
+            <th scope="col">tauxTVA</th>
+            <th scope="col">langue</th>
+            <th scope="col">remarques</th>
+            <th scope="col">id_liste_fournisseurs</th>
+        </tr>
+        <% for (var i=0; i<fournisseur.length; i++){ %>
+        <tr>
+            <td>
+                <a class="bouton" href="/fournisseurs/<%=fournisseur[i].idFournisseur %> ">Delete fournisseur</a>
+              </td>
+            <td contenteditable='true' id="<%=i%>" class="listeFournisseur" >
+                <%=fournisseur[i].listeFournisseur%> 
+            </td>
+            <td id="idFournisseur<%=i%>" name="idFournisseur">
+                <%=fournisseur[i].idFournisseur %> 
+            </td>
+            <td contenteditable='true' id="<%=i%>" class="societe" >
+                <%=fournisseur[i].societe %> 
+            </td>
+            <td contenteditable='true' id="<%=i%>" class="nomPrenom" >
+                <%=fournisseur[i].nomPrenom %> 
+            </td>
+            <td contenteditable='true' id="<%=i%>" class="adresse1" >
+                <%=fournisseur[i].adresse1 %> 
+            </td>
+            <td  contenteditable='true' id="<%=i%>" class="adresse2" >
+                <%=fournisseur[i].adresse2 %> 
+            </td>
+            <td contenteditable='true' id="<%=i%>" class="cpostal" >
+                <%=fournisseur[i].cpostal %> 
+            </td>
+            <td contenteditable='true' id="<%=i%>" class="ville" >
+                <%=fournisseur[i].ville %> 
+            </td>
+            <td contenteditable='true' id="<%=i%>" class="pays" >
+                <%=fournisseur[i].pays %> 
+            </td>
+            <td contenteditable='true' id="<%=i%>" class="telephone" >
+                <%=fournisseur[i].telephone %> 
+            </td>
+            <td contenteditable='true' id="<%=i%>" class="portable" >
+                <%=fournisseur[i].portable %> 
+            </td>
+            <td contenteditable='true' id="<%=i%>" class="site" >
+                <%=fournisseur[i].site %> 
+            </td>
+            <td contenteditable='true' id="<%=i%>" class="e_mail" >
+                <%=fournisseur[i].e_mail %> 
+            </td>
+            <td contenteditable='true' id="<%=i%>" class="nTVA" >
+                <%=fournisseur[i].nTVA %> 
+            </td>
+            <td contenteditable='true' id="<%=i%>" class="tauxTVA" >
+                <%=fournisseur[i].tauxTVA %> 
+            </td>
+            <td contenteditable='true' id="<%=i%>" class="langue" >
+                <%=fournisseur[i].langue %> 
+            </td>
+            <td contenteditable='true' id="<%=i%>" class="remarques" >
+                <%=fournisseur[i].remarques %> 
+            </td>
+            <td>
+                <%=fournisseur[i].liste_fournisseurs %> 
+            </td>
+        </tr>
+        <% } %> 
+    </table>
+
+    <script>
+        function myFunction() {
+          // Declare variables
+          var input, filter, table, tr, td, i, txtValue;
+          input = document.getElementById("myInput");
+          filter = input.value.toUpperCase();
+          table = document.getElementById("myTable");
+          tr = table.getElementsByTagName("tr");
+          a = document.getElementById("selectionRecherche").value;
+        
+          // Loop through all table rows, and hide those who don't match the search query
+          for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[a];
+            if (td) {
+              txtValue = td.textContent || td.innerText;
+              if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+              } else {
+                tr[i].style.display = "none";
+              }
+            }
+          }
+        }
+
+        //Pour trigger modification et envoyer avec post method
+        var all = document.getElementsByTagName("td");
+        for (var j=0; j<all.length;j++){
+            all[j].addEventListener("input", function(e) {
+                const newData = this.innerHTML;
+                let stringID = 'idFournisseur' + this.id;
+                const myID = document.getElementById(stringID).innerHTML;
+                const myColumn = this.className;
+                const data = {newData, myID, myColumn};
+                const options = {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type':'application/json'
+                    },
+                body: JSON.stringify(data)
+                };
+                fetch('./fournisseurs/inter/modification', options);
+                e.stopPropagation();
+            }, false);     
+        }
+
+        //Pour affichage ou pas des colonnes visible
+        var delC =null, oTh =  null;
+        document.addEventListener('DOMContentLoaded',function(){
+            //reperage click
+            oTable = document.getElementById('myTable');
+            oTh = oTable.getElementsByTagName('th');
+            for(var i = 0; i<oTh.length; i++){
+                oTh[i].addEventListener('click',  supprimerColonne);
+            }
+        });
+        
+        function supprimerColonne(oEvent){
+            var sClassHide = 'cel-hide',oEle = oEvent.currentTarget,
+                oTable = oEle.parentNode.parentNode.parentNode,
+                iIndex = oEle.cellIndex,
+                oTd = oTable.querySelectorAll('td:nth-child('+(iIndex+1)+')'), 
+                iNbTd = oTd.length;
+            for(var i = 0; i< iNbTd; i++){
+                oTd[i].classList.add(sClassHide);
+            }
+            oEle.classList.add(sClassHide);
+            addAfficher(iIndex);
+        }
+        
+        function names(iIndex){
+            let res;
+            switch(iIndex){
+                case 1:
+                    res = "listeFournisseur";
+                    break;
+                case 2:
+                    res = "idFournisseur";
+                    break;
+                case 3:
+                    res = "societe";
+                    break;
+                case 4:
+                    res = "nomPrenom";
+                    break;
+                case 5:
+                    res = "adresse1";
+                    break;
+                case 6:
+                    res = "adresse2";
+                    break;
+                case 7:
+                    res = "cpostal";
+                    break;
+                case 8:
+                    res = "ville";
+                    break;
+                case 9:
+                    res = "pays";
+                    break;
+                case 10:
+                    res = "telephone";
+                    break;
+                case 11:
+                    res = "portable";
+                    break;
+                case 12:
+                    res = "site";
+                    break;
+                case 13:
+                    res = "email";
+                    break;
+                case 14:
+                    res = "nTVA";
+                    break;
+                case 15:
+                    res = "tauxTVA";
+                    break;
+                case 16:
+                    res = "langue";
+                    break;
+                case 17:
+                    res = "remarques";
+                    break;
+                case 18:
+                    res = "idListeFournisseur";
+                    break;
+                default:
+                    res = iIndex;
+            }
+            return res;
+        }
+
+        function addAfficher(iIndex){
+            var oBloc = document.getElementById("reaffiche");
+            let cellName = names(iIndex);
+            oBloc.innerHTML += '<a href="javascript:reAfficher('+iIndex+')" id="col-'+iIndex+'">Réaffiche colonne '+cellName+'</a><br>';
+        }
+        
+        function reAfficher(iIndex){
+            document.getElementById("col-"+iIndex).remove();
+            var sClassHide = 'cel-hide',
+                oTable = document.getElementById("myTable"),
+                oTd = oTable.querySelectorAll('td:nth-child('+(iIndex+1)+')'), 
+                iNbTd = oTd.length;
+            for(var i = 0; i< iNbTd; i++){
+                oTd[i].classList.remove(sClassHide);
+            }
+            oTable.querySelector('th:nth-child('+(iIndex+1)+')').classList.remove(sClassHide);
+        }
+        </script>
+</body>
+</html>

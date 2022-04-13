@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css"/>
+    <title>Ajout projet</title>
+</head>
+<body>
+    <h1> Ajout projet </h1>
+    <h2> Entrer vos informations </h2>
+    <a class ="bouton" href="/fournisseurs">Retourner à liste fournisseur</a>
+    
+    <form action ="/fournisseurs/ajoutFournisseur" method="POST">
+        <p>
+            <label>idFournisseur : <input type="number" name="idFournisseur" /> </label>
+        </p>
+        <p>
+            <label>listeFournisseur : <input type="text" name="listeFournisseur"/> </label>
+        </p>
+        <p>
+           <label>nomPrenom : <input type="text" name="nomPrenom"/></label>
+        </p>
+        <p>
+           <label>societe : <input type="text" name="societe"/></label>
+        </p>
+        <p>
+           <label>adresse1 : <input type="text" name="adresse1"/></label>
+        </p>
+        <p>
+           <label>adresse2 : <input type="text" name="adresse2"/></label>
+        </p>
+        <p>
+           <label>code postal : <input type="text" name="cpostal"/></label>
+        </p>
+        <p>
+           <label>ville : <input type="text" name="ville"/></label>
+        </p>
+        <p>
+           <label>pays : <input type="text" name="pays"/></label>
+        </p>
+        <p>
+           <label>telephone : <input type="text" name="telephone"/></label>
+        </p>
+        <p>
+           <label>portable : <input type="text" name="portable"/></label>
+        </p>
+        <p>
+           <label>site : <input type="text" name="site"/></label>
+        </p>
+        <p>
+           <label>email : <input type="text" name="email"/></label>
+        </p>
+        <p>
+           <label>nTVA : <input type="text" name="nTVA"/></label>
+        </p>
+        <p>
+           <label>taux TVA : <input type="text" name="tauxTVA"/></label>
+        </p>
+        <p>
+           <label>langue : <input type="text" name="langue"/></label>
+        </p>
+        <p>
+           <label>remarques : <input type="text" name="remarques"/></label>
+        </p>
+        <p>
+           <label>taux échange : <input type="text" name="tauxEchange"/></label>
+        </p>
+        <button> Sauver </button>
+    </form>
+</body>
+</html>

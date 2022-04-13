@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css"/>
+    <title>ERP Machine Sight</title>
+</head>
+<body>
+    <h1> ERP </h1>
+    <h2> Liste d'articles </h2>
+    <a class ="bouton" href="/article/fournisseur">Liste fournisseurs</a>
+    <a class ="bouton" href="/article/projet">Liste projets</a>
+    <a class ="bouton" href="/article/bonCommande">Liste bons commande</a>
+    <a class ="bouton" href="/article/nomenclature">Liste nomenclatures</a>
+
+    <label for="selectionRecherche">Choose search column: </label>
+    <select name="selectionRecherche" id="selectionRecherche">
+        <label>Choissir colonne de recherche</label>
+        <option value="0">refFournisseur</option>
+        <option value="1">refMachineSight</option>
+        <option value="2">prevu</option>
+        <option value="3">effectue</option>
+        <option value="5">fournisseur</option>
+        <option value="6">refProjet</option>
+        <option value="7">client</option>
+        <option value="8">refFacture</option>
+        <option value="9">refCommande</option>
+        <option value="14">par</option>
+    </select>
+    <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for..">
+
+    <table id="myTable">
+        <tr class="header">
+            <th>refFournisseur</th>
+            <th>refMachineSight</th>
+            <th>prevu</th>
+            <th>effectue</th>
+            <th>description</th>
+            <th>fournisseur</th>
+            <th>refProjet</th>
+            <th>client</th>
+            <th>refFacture</th>
+            <th>refCommande</th>
+            <th>quantite</th>
+            <th>prixUnitaire</th>
+            <th>remise</th>
+            <th>montantDepense</th>
+            <th>par</th>
+            <th>nePasToucher</th>
+        </tr>
+        <% for (var i=0; i<article.length; i++){ %>
+        <tr>
+                <td>
+                    <%=article[i].refFournisseur %> 
+                </td>
+                <td>
+                    <%=article[i].refMachineSight %> 
+                </td>
+                <td>
+                    <%=article[i].prevu %> 
+                </td>
+                <td>
+                    <%=article[i].effectue %> 
+                </td>
+                <td>
+                    <%=article[i].description %> 
+                </td>
+                <td>
+                    <%=article[i].fournisseur %> 
+                </td>
+                <td>
+                    <%=article[i].refProjet %> 
+                </td>
+                <td>
+                    <%=article[i].client %> 
+                </td>
+                <td>
+                    <%=article[i].refFacture %> 
+                </td>
+                <td>
+                    <%=article[i].refCommande %> 
+                </td>
+                <td>
+                    <%=article[i].quantite %> 
+                </td>
+                <td>
+                    <%=article[i].prixUnitaire %> 
+                </td>
+                <td>
+                    <%=article[i].remise %> 
+                </td>
+                <td>
+                    <%=article[i].montantDepense %> 
+                </td>
+                <td>
+                    <%=article[i].par %> 
+                </td>
+                <td>
+                    <%=article[i].nePasToucher %> 
+                </td>
+        </tr>
+        <% } %> 
+    </table>
+
+    <script>
+        function myFunction() {
+          // Declare variables
+          var input, filter, table, tr, td, i, txtValue;
+          input = document.getElementById("myInput");
+          filter = input.value.toUpperCase();
+          table = document.getElementById("myTable");
+          tr = table.getElementsByTagName("tr");
+          a = document.getElementById("selectionRecherche").value;
+        
+          // Loop through all table rows, and hide those who don't match the search query
+          for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[a];
+            if (td) {
+              txtValue = td.textContent || td.innerText;
+              if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+              } else {
+                tr[i].style.display = "none";
+              }
+            }
+          }
+        }
+        </script>
+</body>
+</html>

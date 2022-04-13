@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css"/>
+    <title>ERP Machine Sight</title>
+</head>
+<body>
+    <h1> ERP </h1>
+    <h2> Liste bons de commande </h2>
+    <a class ="bouton" href="/bonCommande/fournisseur">Liste fournisseurs</a>
+    <a class ="bouton" href="/bonCommande/projet">Liste projets</a>
+    <a class ="bouton" href="/bonCommande/article">Liste articles</a>
+    <a class ="bouton" href="/bonCommande/nomenclature">Liste nomenclatures</a>
+    
+    <table id="myTable">
+        <tr class="header">
+            <th>idBonCommande</th>
+            <th>refFournisseur</th>
+            <th>description</th>
+            <th>quantite</th>
+            <th>prixUnitaire</th>
+            <th>remise</th>
+            <th>refProjet</th>
+            <th>numFournisseur</th>
+            <th>nom</th>
+            <th>contact</th>
+            <th>dateCommande</th>
+            <th>dateEcheance</th>
+            <th>statut</th>
+            <th>acheteur</th>
+            <th>approbation</th>
+            <th>numOffreFournisseur</th>
+            <th>prctageRemiseGlobCommandeFacultatif</th>
+            <th>acompteFacultatif</th>
+            <th>remarquesFacultatif</th>
+        </tr>
+        <% for (var i=0; i<bonCommande.length; i++){ %>
+        <tr>
+                <td id="idBonCommande<%=i%>" name="idBonCommande">
+                    <%=bonCommande[i].idBonCommande %> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="refFournisseur">
+                    <%=bonCommande[i].refFournisseur %> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="description">
+                    <%=bonCommande[i].description %> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="quantite">
+                    <%=bonCommande[i].quantite%> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="prixUnitaire">
+                    <%=bonCommande[i].prixUnitaire%> 
+                </td>
+                <td>
+                    <%=bonCommande[i].remise%> 
+                </td>
+                <td>
+                    <%=bonCommande[i].refProjet%> 
+                </td>
+                <td>
+                    <%=bonCommande[i].numFournisseur%> 
+                </td>
+                <td>
+                    <%=bonCommande[i].nom%> 
+                </td>
+                <td>
+                    <%=bonCommande[i].contact%> 
+                </td>
+                <td>
+                    <%=bonCommande[i].dateCommande%> 
+                </td>
+                <td>
+                    <%=bonCommande[i].dateEcheance%> 
+                </td>
+                <td>
+                    <%=bonCommande[i].dateEcheance%> 
+                </td>
+                <td>
+                    <%=bonCommande[i].statut%> 
+                </td>
+                <td>
+                    <%=bonCommande[i].acheteur%> 
+                </td>
+                <td>
+                    <%=bonCommande[i].approbation%> 
+                </td>
+                <td>
+                    <%=bonCommande[i].numOffreFournisseur%> 
+                </td>
+                <td>
+                    <%=bonCommande[i].prctageRemiseGlobCommandeFacultatif%> 
+                </td>
+                <td>
+                    <%=bonCommande[i].acompteFacultatif%> 
+                </td>
+                <td>
+                    <%=bonCommande[i].remarquesFacultatif%> 
+                </td>
+        </tr>
+        <% } %> 
+    </table>
+    
+    <script>
+        function myFunction() {
+          // Declare variables
+          var input, filter, table, tr, td, i, txtValue;
+          input = document.getElementById("myInput");
+          filter = input.value.toUpperCase();
+          table = document.getElementById("myTable");
+          tr = table.getElementsByTagName("tr");
+          a = document.getElementById("selectionRecherche").value;
+        
+          // Loop through all table rows, and hide those who don't match the search query
+          for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[a];
+            if (td) {
+              txtValue = td.textContent || td.innerText;
+              if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+              } else {
+                tr[i].style.display = "none";
+              }
+            }
+          }
+        }
+
+        //Pour trigger modification et envoyer avec post method
+        var all = document.getElementsByTagName("td");
+        for (var j=0; j<all.length;j++){
+            all[j].addEventListener("input", function(e) {
+                const newData = this.innerHTML;
+                let stringID = 'idBonCommande' + this.id;
+                const myID = document.getElementById(stringID).innerHTML;
+                const myColumn = this.className;
+                const data = {newData, myID, myColumn};
+                const options = {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type':'application/json'
+                    },
+                body: JSON.stringify(data)
+                };
+                fetch('./bonCommande/inter/modification', options);
+                e.stopPropagation();
+            }, false);     
+        }
+        </script>
+</body>
+</html>
