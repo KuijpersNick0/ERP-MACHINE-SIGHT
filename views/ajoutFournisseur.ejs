@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css"/>
+    <title>Ajout projet</title>
+</head>
+<body>
+    <h1> Ajout fournisseur </h1>
+    <h2> Entrer vos informations </h2>
+    <a class ="bouton" href="/fournisseurs">Retourner à liste fournisseur</a>
+    
+    <form action ="/fournisseurs/ajoutFournisseur" method="POST">
+        <p>
+            <label>idFournisseur : <input type="text" name="idFournisseur" required="true" maxlength="45"/> </label>
+        </p>
+        <p>
+            <label>listeFournisseur : <input type="text" name="listeFournisseur" maxlength="45"/> </label>
+        </p>
+        <p>
+           <label>nomPrenom : <input type="text" name="nomPrenom" maxlength="45"/></label>
+        </p>
+        <p>
+           <label>societe : <input type="text" name="societe" maxlength="45"/></label>
+        </p>
+        <p>
+           <label>adresse1 : <input type="text" name="adresse1" maxlength="45"/></label>
+        </p>
+        <p>
+           <label>adresse2 : <input type="text" name="adresse2" maxlength="45"/></label>
+        </p>
+        <p>
+           <label>code postal : <input type="text" name="cPostal" maxlength="45"/></label>
+        </p>
+        <p>
+           <label>ville : <input type="text" name="ville" maxlength="45"/></label>
+        </p>
+        <p>
+           <label>pays : <input type="text" name="pays" maxlength="45"/></label>
+        </p>
+        <p>
+           <label>telephone : <input type="text" name="telephone" maxlength="45"/></label>
+        </p>
+        <p>
+           <label>portable : <input type="text" name="portable" maxlength="45"/></label>
+        </p>
+        <p>
+           <label>site : <input type="text" name="site" maxlength="45"/></label>
+        </p>
+        <p>
+           <label>email : <input type="text" name="email" maxlength="45"/></label>
+        </p>
+        <p>
+           <label>nTVA : <input type="text" name="nTVA" maxlength="45"/></label>
+        </p>
+        <p>
+           <label>taux TVA : <input type="text" name="tauxTVA" maxlength="45"/></label>
+        </p>
+        <p>
+           <label>langue : <input type="text" name="langue" maxlength="45"/></label>
+        </p>
+        <p>
+           <label>remarques : <input type="text" name="remarques" maxlength="45"/></label>
+        </p>
+        <p>
+           <label>taux échange : <input type="text" name="tauxEchange" maxlength="45"/></label>
+        </p>
+        <button> Sauver </button>
+    </form>
+</body>
+</html>

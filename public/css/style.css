@@ -1,0 +1,202 @@
+body h1 {
+    text-align: center;
+    color: #0F316F;
+}
+body h2 {
+    color: #0F316F;
+}
+/*
+td, th {
+    border: 1px solid rgba(190, 190, 190, 0.39);
+    padding: 5px;
+    text-align: center;
+}
+*/
+
+.cel-hide {display:none}
+
+.bouton {
+    color: #006407;
+    background-color:#A9A9A9;
+    border: none;
+    text-align: center;
+    font-weight: 900;
+    display: inline-block;
+    padding: 5px;
+    margin: 5px;
+    border-radius: 4px;
+    text-decoration: none;
+}
+
+#menu {
+  border-style: solid;
+}
+
+#myInput {
+    background-position: 10px 12px; /* Position the search icon */
+    background-repeat: no-repeat; /* Do not repeat the icon image */
+    width: 100%; /* Full-width */
+    font-size: 16px; /* Increase font-size */
+    padding: 12px 20px 12px 40px; /* Add some padding */
+    border: 1px solid #ddd; /* Add a grey border */
+    margin-bottom: 12px; /* Add some space below the input */
+}
+  
+#myTable {
+border-collapse: collapse; /* Collapse borders */
+width: 100%; /* Full-width */
+border: 1px solid #ddd; /* Add a grey border */
+font-size: 18px; /* Increase font-size */
+}
+
+#myTable th, #myTable td {
+text-align: left; /* Left-align text */
+padding: 12px; /* Add padding */
+}
+
+#myTable tr {
+/* Add a bottom border to all table rows */
+border-bottom: 1px solid #ddd;
+}
+
+#myTable tr.header, #myTable tr:hover {
+/* Add a grey background color to the table header and on hover */
+background-color: #f1f1f1;
+}
+
+/* TEST MENU NAV */
+/* The side navigation menu */
+.sidenav {
+    height: 100%; /* 100% Full-height */
+    width: 0; /* 0 width - change this with JavaScript */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Stay on top */
+    top: 0; /* Stay at the top */
+    left: 0;
+    background-color: #111; /* Black*/
+    overflow-x: hidden; /* Disable horizontal scroll */
+    padding-top: 60px; /* Place content 60px from the top */
+    transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+  }
+  
+  /* The navigation menu links */
+  .sidenav a {
+    padding: 8px 8px 8px 32px;
+    text-decoration: none;
+    font-size: 25px;
+    color: #818181;
+    display: block;
+    transition: 0.3s;
+  }
+  
+  /* When you mouse over the navigation links, change their color */
+  .sidenav a:hover {
+    color: #f1f1f1;
+  }
+  
+  /* Position and style the close button (top right corner) */
+  .sidenav .closebtn {
+    position: absolute;
+    top: 0;
+    right: 25px;
+    font-size: 36px;
+    margin-left: 50px;
+  }
+  
+  /* Style page content - use this if you want to push the page content to the right when you open the side navigation */
+  #main {
+    transition: margin-left .5s;
+    padding: 20px;
+  }
+  
+  /* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
+  @media screen and (max-height: 450px) {
+    .sidenav {padding-top: 15px;}
+    .sidenav a {font-size: 18px;}
+  }
+
+  
+/* TEST */
+.cage{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 24em;
+  height: 24em;
+  background: #ccc;
+  background: linear-gradient(to right, rgba(255, 0, 0, 0.5) 50%,
+                                        rgba(0, 255, 0, 0.5) 50%),
+              linear-gradient(to bottom, rgba(0, 0, 255, 0.5) 50%,
+                                        rgba(255, 255, 0, 0.5) 50%);  
+}
+.box{
+  position: relative;
+  width: 12em;
+  height: 12em;
+  float: left;
+  background: transparent;
+}
+.dot{
+  z-index: -1;
+  position: absolute;
+  top: 5.5em;
+  left: 5.5em;
+  border-radius: 50%;
+  background: #fff;
+  width: 1em;
+  height: 1em;
+  transition:  0.155s all ease-in;
+  will-change: box-shadow;
+  will-change: transform;
+}
+.dot:after{
+  position: absolute;
+  content: "";
+  border-radius: inherit;
+  background: inherit;
+  width: inherit;
+  height: inherit;
+  box-shadow: 0 0 0 0.25em #fff;
+  will-change: animation;
+  will-change: transform;
+  will-change: opacity;
+}
+.box--topleft:hover ~ .dot{
+  transform:  translate(12em, 0);
+  box-shadow: 0 0 0 0.5em rgba(255, 255, 255, 0.5);
+}
+.box--topleft:hover ~ .dot:after{
+  animation: superdot1 0.155s 1; 
+}
+.box--topright:hover ~ .dot{
+  transform:  translate(0, 12em);
+  box-shadow: 0 0 0 0.5em rgba(255, 255, 255, 0.5);
+}
+.box--topright:hover ~ .dot:after{
+  animation: superdot1 0.155s 1; 
+}
+.box--bottomleft:hover ~ .dot{
+  transform:  translate(12em , 12em);
+  box-shadow: 0 0 0 0.5em rgba(255, 255, 255, 0.5);
+}
+.box--bottomleft:hover ~ .dot:after{
+  animation: superdot1 0.155s 1; 
+}
+.box--bottomright:hover ~ .dot{
+  transform:  translate(0, 0);
+  box-shadow: 0 0 0 0.5em rgba(255, 255, 255, 0.5);
+}
+.box--bottomright:hover ~ .dot:after{
+  animation: superdot1 0.155s 1; 
+}
+@keyframes superdot1{
+  0%, 100%{
+    transform: scale(1);
+    opacity: 1;
+  }
+  50%{
+    transform: scale(3);
+    opacity: 0.4;
+  }
+}

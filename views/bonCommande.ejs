@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css"/>
+    <title>ERP Machine Sight</title>
+</head>
+<body>
+    <span id="menu" onclick="openNav()">Menu</span>
+    <h1> ERP </h1>
+    <h2> Liste bons de commande </h2>
+
+    <div id="mySidenav" class="sidenav">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <a class ="bouton" href="/bonCommande/fournisseur">Liste fournisseurs</a>
+        <a class ="bouton" href="/bonCommande/projet">Liste projets</a>
+        <a class ="bouton" href="/bonCommande/nomenclature">Liste nomenclatures</a>
+        <a class ="bouton" href="/connection">Connection</a>
+    </div>
+
+    <table id="myTable">
+        <tr class="header">
+            <th>idBonCommande</th>
+            <th>ref Fournisseur</th>
+            <th>description</th>
+            <th>prix Total</th>
+            <th>remise</th>
+            <th>idProjet</th>
+            <th>idFournisseur</th>
+            <th>dateCommande</th>
+            <th>dateEcheance</th>
+            <th>statut</th>
+            <th>pseudo</th>
+            <th>approbation</th>
+            <th>numOffreFournisseur</th>
+            <th>prctageRemiseGlobCommande</th>
+            <th>acompte</th>
+            <th>remarques</th>
+            <th>DescriptionpProjet</th>
+            <th>client</th>
+            <th>nomPrenomFournisseur</th>
+        </tr>
+        <% for (var i=0; i<bonCommande.length; i++){ %>
+        <tr>
+                <td id="idBonCommande<%=i%>" name="idBonCommande">
+                    <%=bonCommande[i].idBonCommande %> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="refFournisseur">
+                    <%=bonCommande[i].refFournisseur %> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="description">
+                    <%=bonCommande[i].description %> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="prixTotal">
+                    <%=bonCommande[i].prixTotal%> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="remise">
+                    <%=bonCommande[i].remise%> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="idProjet0">
+                    <%=bonCommande[i].idProjet0%> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="idFournisseur0">
+                    <%=bonCommande[i].idFournisseur0%>
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="dateCommande">
+                    <%=bonCommande[i].dateCommande%> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="dateEcheance">
+                    <%=bonCommande[i].dateEcheance%> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="statut">
+                    <%=bonCommande[i].statut%> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="pseudo0">
+                    <%=bonCommande[i].pseudo0%> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="approbation">
+                    <%=bonCommande[i].approbation%> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="numOffreFournisseur">
+                    <%=bonCommande[i].numOffreFournisseur%> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="prctageRemiseGlobCommande">
+                    <%=bonCommande[i].prctageRemiseGlobCommande%> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="acompte">
+                    <%=bonCommande[i].acompte%> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="remarques">
+                    <%=bonCommande[i].remarques%> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="descriptionProjet">
+                    <%=bonCommande[i].descriptionProjet%> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="client">
+                    <%=bonCommande[i].client%> 
+                </td>
+                <td contenteditable='true' id="<%=i%>" class="nomPrenomFournisseur">
+                    <%=bonCommande[i].nomPrenomProjet%> 
+                </td>
+        </tr>
+        <% } %> 
+    </table>
+    
+    <script>
+        function openNav() {
+            //Pour menu nav
+            document.getElementById("mySidenav").style.width = "250px";
+            document.getElementById("main").style.marginLeft = "250px";
+            document.body.style.backgroundColor = "rgba(0,0,0,0.4)";
+        }
+        function closeNav() {
+            document.getElementById("mySidenav").style.width = "0";
+            document.getElementById("main").style.marginLeft = "0";
+            document.body.style.backgroundColor = "white";
+        }
+
+        function myFunction() {
+          // Declare variables
+          var input, filter, table, tr, td, i, txtValue;
+          input = document.getElementById("myInput");
+          filter = input.value.toUpperCase();
+          table = document.getElementById("myTable");
+          tr = table.getElementsByTagName("tr");
+          a = document.getElementById("selectionRecherche").value;
+        
+          // Loop through all table rows, and hide those who don't match the search query
+          for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[a];
+            if (td) {
+              txtValue = td.textContent || td.innerText;
+              if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+              } else {
+                tr[i].style.display = "none";
+              }
+            }
+          }
+        }
+
+        //Pour trigger modification et envoyer avec post method
+        var all = document.getElementsByTagName("td");
+        for (var j=0; j<all.length;j++){
+            all[j].addEventListener("input", function(e) {
+                const newData = this.innerHTML;
+                let stringID = 'idBonCommande' + this.id;
+                const myID = document.getElementById(stringID).innerHTML;
+                const myColumn = this.className;
+                const data = {newData, myID, myColumn};
+                const options = {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type':'application/json'
+                    },
+                body: JSON.stringify(data)
+                };
+                fetch('./bonCommande/inter/modification', options);
+                e.stopPropagation();
+            }, false);     
+        }
+        </script>
+</body>
+</html>

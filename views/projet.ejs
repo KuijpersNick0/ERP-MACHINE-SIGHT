@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css"/>
+    <title>ERP Machine Sight</title>
+</head>
+<body>
+    <span id="menu" onclick="openNav()"> Menu </span>
+    <h1> ERP </h1>
+    <h2> liste des projets </h2>
+    
+    <div id="alert"></div>
+
+    <div id="mySidenav" class="sidenav">
+      <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+      <a class ="bouton" href="/projet/fournisseur">Liste fournisseurs</a>
+      <a class ="bouton" href="/projet/bonCommande">Liste bons commande</a>
+      <a class ="bouton" href="/projet/nomenclature">Liste nomenclatures</a>
+      <a class ="bouton" href="/connection">Connection</a>
+    </div>
+    
+    <a class ="bouton" href="/projet/ajoutProjet">Ajouter projet</a>
+    
+    <label for="selectionRecherche">Choose search column </label>
+    <select name="selectionRecherche" id="selectionRecherche">
+        <label>Choissir colonne de recherche</label>
+        <option value="1">idProjet</option>
+        <option value="2">Nom</option>
+        <option value="3">Description</option>
+        <option value="4">prixTotal</option>
+    </select>
+    <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for..">
+    <table id="myTable">
+            <tr class="header">
+                <th>Delete</th>
+                <th>idProjet</th>
+                <th>Nom</th>
+                <th>Description</th>
+                <th>prix total</th>
+            </tr>
+            <% for (var i=0; i<projet.length; i++){ %>
+            <tr>
+                  <td>
+                    <a class="bouton" href="/projet/<%=projet[i].idProjet %> ">Delete projet</a>
+                  </td>
+                    <td id="idProjet<%=i%>" name="idProjet">
+                        <%=projet[i].idProjet %> 
+                    </td>
+                    <td contenteditable='true' id="<%=i%>" class="nom" >
+                        <%=projet[i].nom %> 
+                    </td>
+                    <td contenteditable='true' id="<%=i%>" class="description">
+                        <%=projet[i].description %> 
+                    </td>
+                    <td contenteditable="true" id="<%=i%>" class="prixTotal">
+                        <%=projet[i].prixTotal %>
+                    </td>
+            </tr>
+            <% } %> 
+    </table>
+
+    <script>
+      /* pour menu nav*/
+      function openNav() {
+      document.getElementById("mySidenav").style.width = "250px";
+      document.getElementById("main").style.marginLeft = "250px";
+      document.body.style.backgroundColor = "rgba(0,0,0,0.4)";
+      }
+      function closeNav() {
+      document.getElementById("mySidenav").style.width = "0";
+      document.getElementById("main").style.marginLeft = "0";
+      document.body.style.backgroundColor = "white";
+      }
+
+      function myFunction() {
+        // Declare variables
+        var input, filter, table, tr, td, i, txtValue;
+        input = document.getElementById("myInput");
+        filter = input.value.toUpperCase();
+        table = document.getElementById("myTable");
+        tr = table.getElementsByTagName("tr");
+        a = document.getElementById("selectionRecherche").value;
+      
+        // Loop td
+        for (i = 0; i < tr.length; i++) {
+          td = tr[i].getElementsByTagName("td")[a];
+          if (td) {
+            txtValue = td.textContent || td.innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+              tr[i].style.display = "";
+            } else {
+              tr[i].style.display = "none";
+            }
+          }
+        }
+      }
+
+      //Pour trigger modification et envoyer avec post method
+      var all = document.getElementsByTagName("td");
+      for (var j=0; j<all.length;j++){
+          all[j].addEventListener("input", function(e) {
+              const newData = this.innerHTML;
+              let stringID = 'idProjet' + this.id;
+              const myID = document.getElementById(stringID).innerHTML;
+              const myColumn = this.className;
+              const data = {newData, myID, myColumn};
+              const options = {
+                  method: 'POST',
+                  headers: {
+                  'Content-Type':'application/json'
+                  },
+              body: JSON.stringify(data)
+              };
+              fetch('./projet/inter/modification', options);
+              e.stopPropagation();
+          }, false);       
+      }
+        </script>
+</body>
+</html>
