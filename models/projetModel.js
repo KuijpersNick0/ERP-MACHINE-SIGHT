@@ -1,9 +1,12 @@
 class Projet {
-    constructor(idProjet, nom, description, prixTotal){
+    constructor(pkProjet, idProjet, nom, description, prixTotalNomenclature, prixTotalBonCommande, natureProjet){
+        this.pkProjet = pkProjet;
         this.idProjet = idProjet;
         this.nom = nom;
         this.description = description;
-        this.prixTotal = prixTotal;
+        this.prixTotalNomenclature = prixTotalNomenclature;
+        this.prixTotalBonCommande = prixTotalBonCommande;
+        this.natureProjet = natureProjet;
     }   
 }
 module.exports = Projet;

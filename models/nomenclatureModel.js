@@ -1,7 +1,7 @@
 class Nomenclature {
-    constructor(idNomenclature, idPiece, denomination,idProjet1, rev, qte, unite, matiere, brut, realisation, finition, traitementDeSurface, planEdite, fournisseur, refFournisseur, livraisonPrevue, statut, idBonCommande1, commentaire, nomProjet, client, 
-        idFournisseur1, prixUnitMS, prixUnitClient, remise, prixNetTotal, marge, prixTotalClient, effectue, refCommande, montantDepense, par){
-        
+    constructor(pkNomenclature, idNomenclature, idPiece, denomination, idProjet, rev, qte, unite, matiere, brut, realisation, finition, traitementDeSurface, planEdite, fournisseur, refFournisseur, livraisonPrevue, statut, idBonCommande, commentaire, nomProjet, client, 
+        idFournisseur, prixUnitMS, prixUnitClient, remise, prixNetTotal, marge, prixTotalClient, effectue, refCommande, montantDepense, par, fkProjet, fkBonCommande, fkFournisseur, fkClient, fkUser){  
+        this.pkNomenclature = pkNomenclature;
         this.idNomenclature = idNomenclature;
         this.idPiece = idPiece;
         this.denomination = denomination;
@@ -24,16 +24,22 @@ class Nomenclature {
         this.prixTotalClient = prixTotalClient;
         this.livraisonPrevue = livraisonPrevue;
         this.statut = statut;
-        this.idBonCommande1 = idBonCommande1;
+        this.idBonCommande = idBonCommande;
         this.commentaire = commentaire;
-        this.idProjet1 = idProjet1;
+        this.idProjet = idProjet;
         this.nomProjet = nomProjet;
         this.client = client;
-        this.idFournisseur1 = idFournisseur1;
+        this.idFournisseur = idFournisseur;
         this.effectue = effectue;
         this.refCommande = refCommande;
         this.montantDepense = montantDepense;
         this.par = par;
+        this.fkProjet = fkProjet;
+        this.fkFournisseur =fkFournisseur ;
+        this.fkBonCommande =fkBonCommande ;
+        this.fkUser = fkUser;
+        this.fkClient =fkClient ;
+
     }   
 }
 module.exports = Nomenclature;

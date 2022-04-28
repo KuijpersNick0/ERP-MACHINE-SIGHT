@@ -1,10 +1,11 @@
 class User {
-    constructor(pseudo, telephone, email, poste, nomPrenom){
+    constructor(pkUser, pseudo, tel, email, poste, nameUser){
+        this.pkUser = pkUser;
         this.pseudo = pseudo;
-        this.telephone = telephone;
+        this.tel = tel;
         this.email = email;
         this.poste = poste;
-        this.nomPrenom = nomPrenom;
+        this.nameUser = nameUser;
     }   
 }
 module.exports = User;

@@ -1,5 +1,5 @@
 class BonCommande {
-    constructor(idBonCommande, refFournisseur, description, prixTotal, remise, idProjet0, idFournisseur0, dateCommande, dateEcheance, statut, pseudo0, approbation, numOffreFournisseur, prctageRemiseGlobCommande, acompte, remarques, descriptionProjet, client, nomPrenomFournisseur){
+    constructor(idBonCommande, refFournisseur, description, prixTotal, remise, idProjet0, idFournisseur0, dateCommande, dateEcheance, statut, pseudo0, approbation, numOffreFournisseur, prctageRemiseGlobCommande, acompte, remarques, descriptionProjet, client, nomPrenomFournisseur, fkProjet0, fkFournisseur0, fkClient0, fkUser0){
         this.idBonCommande = idBonCommande;
         this.refFournisseur = refFournisseur;
         this.description = description;
@@ -19,6 +19,10 @@ class BonCommande {
         this.descriptionProjet = descriptionProjet;
         this.client = client;
         this.nomPrenomFournisseur = nomPrenomFournisseur;
+        this.fkProjet0= fkProjet0
+        this.fkFournisseur0=fkFournisseur0
+        this.fkClient0=fkClient0
+        this.fkUser0=fkUser0
     }   
 }
 module.exports = BonCommande;
