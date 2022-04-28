@@ -8,7 +8,6 @@ exports.connection = function(req, res) {
     res.render('login.ejs');
 }
 
-
 exports.login = function(req, res) {
     //pour connection
     userList.length = 0;
@@ -22,16 +21,17 @@ exports.login = function(req, res) {
                 req.session.user = pseudo;
                 req.session.save();
                 for (var i=0; i<resultSQL.length; i++){
-                    let user = new User(resultSQL[i].pseudo,resultSQL[i].telephone,resultSQL[i].email, resultSQL[i].poste, resultSQL[i].nomPrenom);
+                    let user = new User(resultSQL[i].pkUser, resultSQL[i].pseudo,resultSQL[i].telephone,resultSQL[i].email, resultSQL[i].poste, resultSQL[i].nomPrenom);
                     userList.push(user);
                 } 
                 console.log("Authentification réussi");
+                res.redirect('/nomenclature');
             } else{
+                res.redirect('/connection');
                 console.log("Personne d'enregistré !");
             }
         }
     });
-    res.redirect('/nomenclature');
 }
 
 exports.getUser = function (req, res) {

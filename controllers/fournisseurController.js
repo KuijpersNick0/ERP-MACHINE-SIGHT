@@ -3,6 +3,7 @@ let Fournisseur = require('../models/fournisseurModel');
 let connection = require('../db');
 
 var fournisseurList0 = [];
+let idFournisseurs = [];
 
 exports.fournisseurList = function(req, res){
     //affiche liste fournisseur
@@ -12,28 +13,11 @@ exports.fournisseurList = function(req, res){
             console.log(error);
         }
         for (var i=0; i<resultSQL.length; i++){
-            let fournisseur = new Fournisseur(resultSQL[i].listeFournisseur,resultSQL[i].idFournisseur,resultSQL[i].societe,resultSQL[i].nomPrenom,resultSQL[i].adresse1,resultSQL[i].adresse2,resultSQL[i].cPostal,resultSQL[i].ville,resultSQL[i].pays,resultSQL[i].telephone,resultSQL[i].portable,resultSQL[i].site,resultSQL[i].email,resultSQL[i].nTVA,resultSQL[i].tauxTVA,resultSQL[i].langue,resultSQL[i].remarques,resultSQL[i].tauxEchange);
+            let fournisseur = new Fournisseur(resultSQL[i].pkFournisseur, resultSQL[i].listeFournisseur,resultSQL[i].idFournisseur,resultSQL[i].societe, resultSQL[i].alias, resultSQL[i].nomPrenom,resultSQL[i].adresse1,resultSQL[i].adresse2,resultSQL[i].cPostal,resultSQL[i].ville,resultSQL[i].pays,resultSQL[i].telephone,resultSQL[i].portable,resultSQL[i].site,resultSQL[i].email,resultSQL[i].nTVA,resultSQL[i].tauxTVA,resultSQL[i].langue,resultSQL[i].remarques,resultSQL[i].tauxEchange);
             fournisseurList0.push(fournisseur);
         }
         res.render('fournisseur.ejs', {fournisseur :resultSQL}); 
     })
-}
-
-exports.goToProjet = function(req, res){
-    //on veut afficher projets
-    res.redirect('/projet');
-}
-exports.goToArticle = function(req, res){
-    //on veut afficher articles
-    res.redirect('/article');
-}
-exports.goToBonCommande = function(req, res){
-    //on veut afficher bon de commande
-    res.redirect('/bonCommande');
-}
-exports.goToNomenclature = function(req, res){
-    //on veut afficher nomenclature
-    res.redirect('/nomenclature');
 }
 
 exports.getFournisseur = function (req, res) {
@@ -43,7 +27,7 @@ exports.getFournisseur = function (req, res) {
         connection.query("SELECT * FROM fournisseur;", function(error, resultSQL){
             if (error) throw error
             for (var i=0; i<resultSQL.length; i++){
-                let fournisseur = new Fournisseur(resultSQL[i].listeFournisseur,resultSQL[i].idFournisseur,resultSQL[i].societe,resultSQL[i].nomPrenom,resultSQL[i].adresse1,resultSQL[i].adresse2,resultSQL[i].cPostal,resultSQL[i].ville,resultSQL[i].pays,resultSQL[i].telephone,resultSQL[i].portable,resultSQL[i].site,resultSQL[i].email,resultSQL[i].nTVA,resultSQL[i].tauxTVA,resultSQL[i].langue,resultSQL[i].remarques,resultSQL[i].tauxEchange);
+                let fournisseur = new Fournisseur(resultSQL[i].pkFournisseur, resultSQL[i].listeFournisseur,resultSQL[i].idFournisseur,resultSQL[i].societe, resultSQL[i].alias, resultSQL[i].nomPrenom,resultSQL[i].adresse1,resultSQL[i].adresse2,resultSQL[i].cPostal,resultSQL[i].ville,resultSQL[i].pays,resultSQL[i].telephone,resultSQL[i].portable,resultSQL[i].site,resultSQL[i].email,resultSQL[i].nTVA,resultSQL[i].tauxTVA,resultSQL[i].langue,resultSQL[i].remarques,resultSQL[i].tauxEchange);
                 fournisseurList0.push(fournisseur);
             }
             return resolve(fournisseurList0);
@@ -56,15 +40,14 @@ exports.deleteFournisseur = async function(req, res){
     let dataDelete = [];
     for (var i=0; i<fournisseurList0.length; i++){
         if (idFournisseur==fournisseurList0[i].idFournisseur){
-            dataDelete.push(fournisseurList0[i].listeFournisseur, fournisseurList0[i].idFournisseur, fournisseurList0[i].societe, fournisseurList0[i].nomPrenom, fournisseurList0[i].adresse1, fournisseurList0[i].adresse2, fournisseurList0[i].cPostal, fournisseurList0[i].ville, fournisseurList0[i].pays, fournisseurList0[i].telephone,
+            dataDelete.push(fournisseurList0[i].pkFournisseur, fournisseurList0[i].idFournisseur, fournisseurList0[i].listeFournisseur, fournisseurList0[i].societe, fournisseurList0[i].alias, fournisseurList0[i].nomPrenom, fournisseurList0[i].adresse1, fournisseurList0[i].adresse2, fournisseurList0[i].cPostal, fournisseurList0[i].ville, fournisseurList0[i].pays, fournisseurList0[i].telephone,
                  fournisseurList0[i].portable, fournisseurList0[i].site, fournisseurList0[i].email, fournisseurList0[i].nTVA, fournisseurList0[i].tauxTVA, fournisseurList0[i].langue, fournisseurList0[i].remarques, fournisseurList0[i].tauxEchange);
             break;
         }
     }
-
     const sqlDelete = "DELETE FROM fournisseur WHERE idFournisseur = ?";
     const delete_query = connection.format(sqlDelete, [idFournisseur]);
-    const sqlInsert = "INSERT INTO fournisseur_delete VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    const sqlInsert = "INSERT INTO fournisseur_delete VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     const insert_query = connection.format(sqlInsert, dataDelete);
     for (var i=0; i<fournisseurList0.length; i++){
         if (idFournisseur==fournisseurList0[i].idFournisseur){
@@ -118,6 +101,7 @@ exports.ajoutFournisseur = function(req, res){
     let tauxEchange = req.body.tauxEchange;
     let newFournisseur = new Fournisseur(idFournisseur, listeFournisseur, nomPrenom, societe, adresse1, adresse2, cPostal, ville, pays, telephone, portable, site, email, nTVA, tauxTVA, langue, remarques, tauxEchange); //tauxECHange a rajout
     fournisseurList0.push(newFournisseur);
+    //Rajouter check idFournisseur unique
     const sqlInsert = "INSERT INTO fournisseur(idFournisseur,listeFournisseur,nomPrenom, societe, adresse1, adresse2, cPostal, ville, pays, telephone, portable, site, email, nTVA, tauxTVA, langue, remarques, tauxEchange) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     let todo = [idFournisseur, listeFournisseur, nomPrenom, societe, adresse1, adresse2, cPostal, ville, pays, telephone, portable, site, email, nTVA, tauxTVA, langue, remarques, tauxEchange];
     connection.query(sqlInsert, todo, function(err, result){
@@ -132,7 +116,7 @@ exports.fournisseurModification = function(request, response){
     //Enregistre modification en bdd avec method fetch-POST
     let newData = request.body.newData;
     let myID = request.body.myID;
-    newData = newData.replace(/(\r\n|\n|\r|\s)/gm,"");
+    newData = newData.replace(/^\s+|\s+$/gm,"");
     myID = myID.replace(/(\r\n|\n|\r|\s)/gm,"");
     let myColumn = request.body.myColumn;
     if (newData.length < 45) {
@@ -144,6 +128,45 @@ exports.fournisseurModification = function(request, response){
         });
     } else {
         console.log("Caractères maximum authorisé dépassé !")
+    }
+    response.redirect('/fournisseurs');
+}
+
+exports.selectAll = function(request, response){
+    //Selectionner id visible à mon utilisateur
+    idFournisseurs.length = 0; 
+    idFournisseurs = request.body.idFournisseurs;
+}
+
+exports.modifAllForm = function(request, response){
+    //affiche form pour tout modifier
+    response.render('modifAllFournisseur.ejs');
+}
+
+exports.modifAllFournisseur = function(request, response){
+    let langue = request.body.langue;
+    let remarques = request.body.remarques;
+    let tauxEchange = request.body.tauxEchange;
+    for (var i=0; i<fournisseurList0.length; i++){
+        //changement local de la liste des fournisseurs
+        for (var j=0; j<idFournisseurs.length; j++){
+            if (fournisseurList0[i].idFournisseur==idFournisseurs[j]){
+                fournisseurList0[i].langue = langue  
+                fournisseurList0[i].remarques = remarques;
+                fournisseurList0[i].tauxEchange = tauxEchange;
+            }
+        }
+    } 
+    if (langue.length<45 && tauxEchange.length<45 && tauxEchange.length<45){
+        //update bdd + verif suppl longueur
+        const sqlUpdate = "UPDATE fournisseur SET langue=?, remarques=?, tauxEchange=? WHERE idFournisseur IN ?";
+        let todo = [langue, remarques, tauxEchange, [idFournisseurs]];
+        connection.query(sqlUpdate, todo, function(err, result){
+            if (err) throw err;
+            console.log("ajout bdd");
+        });
+    } else {
+        console.log("Data trop long");
     }
     response.redirect('/fournisseurs');
 }
