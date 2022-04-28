@@ -14,11 +14,14 @@
 
     <div id="mySidenav" class="sidenav">
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-        <a class ="bouton" href="/bonCommande/fournisseur">Liste fournisseurs</a>
-        <a class ="bouton" href="/bonCommande/projet">Liste projets</a>
-        <a class ="bouton" href="/bonCommande/nomenclature">Liste nomenclatures</a>
+        <a class ="bouton" href="/fournisseurs">Liste fournisseurs</a>
+        <a class ="bouton" href="/projet">Liste projets</a>
+        <a class ="bouton" href="/nomenclature">Liste nomenclatures</a>
         <a class ="bouton" href="/connection">Connection</a>
     </div>
+
+    <a class ="bouton" href="javascript:void(0)" onclick="selectAll()">Selectionner tout</a>
+    <a class ="bouton" href="/bonCommande/modifAllForm">Modifier panier tout</a>
 
     <table id="myTable">
         <tr class="header">
@@ -59,11 +62,11 @@
                 <td contenteditable='true' id="<%=i%>" class="remise">
                     <%=bonCommande[i].remise%> 
                 </td>
-                <td contenteditable='true' id="<%=i%>" class="idProjet0">
-                    <%=bonCommande[i].idProjet0%> 
+                <td contenteditable='true' id="<%=i%>" class="idProjet">
+                    <%=bonCommande[i].idProjet%> 
                 </td>
-                <td contenteditable='true' id="<%=i%>" class="idFournisseur0">
-                    <%=bonCommande[i].idFournisseur0%>
+                <td contenteditable='true' id="<%=i%>" class="idFournisseur">
+                    <%=bonCommande[i].idFournisseur%>
                 </td>
                 <td contenteditable='true' id="<%=i%>" class="dateCommande">
                     <%=bonCommande[i].dateCommande%> 
@@ -74,8 +77,8 @@
                 <td contenteditable='true' id="<%=i%>" class="statut">
                     <%=bonCommande[i].statut%> 
                 </td>
-                <td contenteditable='true' id="<%=i%>" class="pseudo0">
-                    <%=bonCommande[i].pseudo0%> 
+                <td contenteditable='true' id="<%=i%>" class="par">
+                    <%=bonCommande[i].par%> 
                 </td>
                 <td contenteditable='true' id="<%=i%>" class="approbation">
                     <%=bonCommande[i].approbation%> 
@@ -99,7 +102,7 @@
                     <%=bonCommande[i].client%> 
                 </td>
                 <td contenteditable='true' id="<%=i%>" class="nomPrenomFournisseur">
-                    <%=bonCommande[i].nomPrenomProjet%> 
+                    <%=bonCommande[i].nomPrenomFournisseur%> 
                 </td>
         </tr>
         <% } %> 
@@ -117,6 +120,34 @@
             document.getElementById("main").style.marginLeft = "0";
             document.body.style.backgroundColor = "white";
         }
+
+        function selectAll() {
+        //Selectioner tout les id et les renvoyer au controller
+            let idBonCommandes = [];
+            if (document.readyState !== 'loading') {
+            // Attendre que elements soient chargé
+            table = document.getElementById("myTable");
+            tr = table.getElementsByTagName("tr");
+            for (var i=1; i<tr.length; i++){
+                //Parcourir tag tr et boucle condit sur if
+                let elem = 0;
+                if (tr[i].style.display=="") {
+                elem = document.getElementById("idBonCommande"+ (i - 1));
+                idBonCommandes.push(elem.innerHTML.trim());
+                }
+            }
+            const data = {idBonCommandes};
+            const options = {
+                method: 'POST',
+                headers: {
+                'Content-Type':'application/json'
+                },
+            body: JSON.stringify(data)
+            };
+            fetch('./bonCommande/selectAll', options);
+            }
+        }
+
 
         function myFunction() {
           // Declare variables

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css"/>
+    <title>modification fournisseur</title>
+</head>
+<body>
+    <h1> modification fournisseur </h1>
+    <h2> Entrer vos informations </h2>
+    <a class ="bouton" href="/fournisseurs">Retourner à liste fournisseur</a>
+    
+    <form action ="/fournisseurs/modifAllFournisseur" method="POST">
+        <p>
+           <label>langue : <input type="text" name="langue" maxlength="45"/></label>
+        </p>
+        <p>
+           <label>remarques : <input type="text" name="remarques" maxlength="45"/></label>
+        </p>
+        <p>
+           <label>taux échange : <input type="text" name="tauxEchange" maxlength="45"/></label>
+        </p>
+        <button> Sauver </button>
+    </form>
+</body>
+</html>

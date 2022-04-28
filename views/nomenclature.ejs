@@ -15,15 +15,19 @@
     
     <div id="mySidenav" class="sidenav">
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-        <a class ="bouton" href="/nomenclature/fournisseur">Liste fournisseurs</a>
-        <a class ="bouton" href="/nomenclature/bonCommande">Liste bons commande</a>
-        <a class ="bouton" href="/nomenclature/projet">Liste projets</a>
+        <a class ="bouton" href="/fournisseurs">Liste fournisseurs</a>
+        <a class ="bouton" href="/bonCommande">Liste bons commande</a>
+        <a class ="bouton" href="/projet">Liste projets</a>
         <a class ="bouton" href="/connection">Connection</a>
     </div>
 
-    <a class ="bouton" href="/nomenclature/resetPanier">Reset panier bon </a>
-    <a class ="bouton" href="/nomenclature/inter/commandePDF"> Génère PDF bon </a>
-    <a class ="bouton" onclick= ajoutePDF() >Ajoute ref bon</a>
+    <a class ="bouton" href="/nomenclature/resetPanier">Reset panier BDC </a>
+    <a class ="bouton" href="/nomenclature/inter/commandePDF"> Génèrer BDC </a>
+    <a class ="bouton" onclick= ajoutePDF() >Add réference </a>
+    <a class ="bouton" href="javascript:void(0)" onclick="selectAll()">Select all</a>
+    <a class ="bouton" href="/nomenclature/modifAllForm">Modifier all</a>
+    <a class="bouton" href="/nomenclature/majPrixTotal">MAJ prix total</a>
+    <a class="bouton" href="/nomenclature/ajoutNomenclature">Add NMCLTRE</a>
     
     <label for="reference">Reference :</label> <input id="reference" type="text" name="reference" placeholder="Inserer reference bon commande" />
 
@@ -46,7 +50,7 @@
     </select>
     <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for..">
 
-    <form action="/upload-avatar" enctype="multipart/form-data" method="post">
+    <form action="/upload" enctype="multipart/form-data" method="post">
         <label style="font-weight:bold;">Upload nomenclature</label>
         <input type="file" name="fileUpload" >
         <input type="submit">
@@ -98,14 +102,14 @@
                     <td id="idNomenclature<%=i%>" name="idNomenclature"> 
                         <%=nomenclature[i].idNomenclature%> 
                     </td> 
-                    <td contenteditable='true' id="<%=i%>" class="idPiece">
+                    <td id="<%=i%>" class="idPiece">
                         <%=nomenclature[i].idPiece %> 
                     </td>
                     <td contenteditable='true' id="<%=i%>" class="denomination">
                         <%=nomenclature[i].denomination %> 
                     </td>
-                    <td contenteditable='true' id="<%=i%>" class="idProjet1" >
-                        <%=nomenclature[i].idProjet1 %> 
+                    <td id="<%=i%>" class="idProjet">
+                        <%=nomenclature[i].idProjet %> 
                     </td>
                     <td contenteditable='true' id="<%=i%>" class="rev" >
                         <%=nomenclature[i].rev %> 
@@ -146,8 +150,8 @@
                     <td contenteditable='true' id="<%=i%>" class="statut">
                         <%=nomenclature[i].statut %> 
                     </td>
-                    <td contenteditable='true' id="<%=i%>" class="idBonCommande1">
-                        <%=nomenclature[i].idBonCommande1 %> 
+                    <td contenteditable='true' id="<%=i%>" class="idBonCommande">
+                        <%=nomenclature[i].idBonCommande %> 
                     </td>
                     <td contenteditable='true' id="<%=i%>" class="commentaire">
                         <%=nomenclature[i].commentaire %> 
@@ -158,8 +162,8 @@
                     <td contenteditable='true' id="<%=i%>" class="client">
                         <%=nomenclature[i].client %> 
                     </td>
-                    <td contenteditable='true' id="<%=i%>" class="idFournisseur1">
-                        <%=nomenclature[i].idFournisseur1 %> 
+                    <td contenteditable='true' id="<%=i%>" class="idFournisseur">
+                        <%=nomenclature[i].idFournisseur %> 
                     </td>
                     <td contenteditable='true' id="<%=i%>" class="prixUnitMs">
                         <%=nomenclature[i].prixUnitMs %> 
@@ -206,6 +210,53 @@
             document.getElementById("mySidenav").style.width = "0";
             document.getElementById("main").style.marginLeft = "0";
             document.body.style.backgroundColor = "white";
+        }
+
+        window.onload = function() {
+            //alert("let's go!");
+            let statut = document.getElementsByClassName("statut");
+            let livraisonPrevue = document.getElementsByClassName("livraisonPrevue");
+            let dateLivraison = [];
+            let date = new Date();
+            for (var i=0; i<livraisonPrevue.length;i++){
+                dateLivraison.push(new Date(Date.parse(livraisonPrevue[i].innerHTML.trim())));   
+                if (dateLivraison[i]!='Invalid Date' && statut[i].innerHTML.trim()!="recept"){
+                    if (date<=dateLivraison[i]){
+                        statut[i].style.backgroundColor="orange";                        
+                    } else {
+                        statut[i].style.backgroundColor="red";
+                    }
+                }else if (statut[i].innerHTML.trim()=="recept") {
+                    statut[i].style.backgroundColor="lightgreen";                        
+                }
+            }
+        }
+
+        function selectAll() {
+            //Selectioner tout les id et les renvoyer au controller
+            let idNomenclatures = [];
+            if (document.readyState !== 'loading') {
+            // Attendre que elements soient chargé
+                table = document.getElementById("myTable");
+                tr = table.getElementsByTagName("tr");
+                for (var i=1; i<tr.length; i++){
+                    //Parcourir tag tr et boucle condit sur if
+                    let elem = 0;
+                    if (tr[i].style.display=="") {
+                    elem = document.getElementById("idNomenclature"+ (i - 1));
+                    idNomenclatures.push(elem.innerHTML.trim());
+                    }
+                }
+                const data = {idNomenclatures};
+                const options = {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type':'application/json'
+                    },
+                body: JSON.stringify(data)
+                };
+                fetch('./nomenclature/selectAll', options);
+            }
         }
 
         function ajoutePDF() {

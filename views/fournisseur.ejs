@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -14,13 +14,16 @@
 
     <div id="mySidenav" class="sidenav">
         <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-        <a class ="bouton" href="/fournisseurs/projet">Liste projets</a>
-        <a class ="bouton" href="/fournisseurs/bonCommande">Liste bons commande</a>
-        <a class ="bouton" href="/fournisseurs/nomenclature">Liste nomenclatures</a>
+        <a class ="bouton" href="/projet">Liste projets</a>
+        <a class ="bouton" href="/bonCommande">Liste bons commande</a>
+        <a class ="bouton" href="/nomenclature">Liste nomenclatures</a>
         <a class ="bouton" href="/connection">Connection</a>
     </div>
 
     <a class ="bouton" href="/fournisseurs/ajoutFournisseur">Ajouter fournisseur</a>
+    <a class ="bouton" href="javascript:void(0)" onclick="selectAll()">Selectionner tout</a>
+    <a class ="bouton" href="/fournisseurs/modifAllForm">Modifier panier tout</a>
+    <a class ="bouton" href="javascript:void(0)" onclick="viewEco()">Vue economie</a>
 
     <script type="text/javascript">  
         function openNav() {
@@ -42,11 +45,12 @@
         <option value="1">listeFournisseur</option>
         <option value="2">idFournisseur</option>
         <option value="3">societe</option>
-        <option value="4">nomPrenom</option>
-        <option value="5">adresse1</option>
-        <option value="7">cpostal</option>
-        <option value="10">telephone</option>
-        <option value="14">nTVA</option>
+        <option value="4">alias</option>
+        <option value="5">nomPrenom</option>
+        <option value="6">adresse1</option>
+        <option value="8">cpostal</option>
+        <option value="11">telephone</option>
+        <option value="15">nTVA</option>
     </select>
     <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for..">
 
@@ -58,6 +62,7 @@
             <th scope="col">listeFournisseur</th>
             <th scope="col">idFournisseur</th>
             <th scope="col">societe</th>
+            <th scope="col">alias</th>
             <th scope="col">nomPrenom</th>
             <th scope="col">adresse1</th>
             <th scope="col">adresse2</th>
@@ -77,7 +82,7 @@
         <% for (var i=0; i<fournisseur.length; i++){ %>
         <tr>
             <td>
-                <a class="bouton" href="/fournisseurs/<%=fournisseur[i].idFournisseur %> ">Delete fournisseur</a>
+                <a class="bouton" href="/fournisseurs/<%=fournisseur[i].idFournisseur %> ">Delete </a>
               </td>
             <td contenteditable='true' id="<%=i%>" class="listeFournisseur" >
                 <%=fournisseur[i].listeFournisseur%> 
@@ -87,6 +92,9 @@
             </td>
             <td contenteditable='true' id="<%=i%>" class="societe" >
                 <%=fournisseur[i].societe %> 
+            </td>
+            <td contenteditable="true" id="<%=i%>" class="alias">
+                <%=fournisseur[i].alias %>
             </td>
             <td contenteditable='true' id="<%=i%>" class="nomPrenom" >
                 <%=fournisseur[i].nomPrenom %> 
@@ -139,15 +147,14 @@
 
     <script>
         function myFunction() {
-          // Declare variables
+          //  Fonction de recherche
           var input, filter, table, tr, td, i, txtValue;
           input = document.getElementById("myInput");
           filter = input.value.toUpperCase();
           table = document.getElementById("myTable");
           tr = table.getElementsByTagName("tr");
           a = document.getElementById("selectionRecherche").value;
-        
-          // Loop through all table rows, and hide those who don't match the search query
+          // Loop 
           for (i = 0; i < tr.length; i++) {
             td = tr[i].getElementsByTagName("td")[a];
             if (td) {
@@ -182,6 +189,48 @@
             }, false);     
         }
 
+        function selectAll() {
+            //Selectioner tout les id et les renvoyer au controller
+            let idFournisseurs = [];
+            if (document.readyState !== 'loading') {
+            // Attendre que elements soient chargé
+            table = document.getElementById("myTable");
+            tr = table.getElementsByTagName("tr");
+            for (var i=1; i<tr.length; i++){
+                //Parcourir tag tr et boucle condit sur if
+                let elem = 0;
+                if (tr[i].style.display=="") {
+                elem = document.getElementById("idFournisseur"+ (i - 1));
+                idFournisseurs.push(elem.innerHTML.trim());
+                }
+            }
+            const data = {idFournisseurs};
+            const options = {
+                method: 'POST',
+                headers: {
+                'Content-Type':'application/json'
+                },
+            body: JSON.stringify(data)
+            };
+            fetch('./fournisseurs/selectAll', options);
+            }
+        }
+
+        function viewEco(){
+            //view personnalisé des colonnes
+            let listToHide = [4,5,6,7,8,9,10,13,14]
+            var sClassHide = 'cel-hide'
+            oTable = document.getElementById('myTable');
+            oTh = oTable.getElementsByTagName('th');
+            for (var j=0; j<listToHide.length;j++){
+                oTh[listToHide[j]].classList.add(sClassHide);
+                oTd = oTable.querySelectorAll('td:nth-child('+(listToHide[j]+1)+')');
+                for (var i=0; i<oTd.length; i++){
+                    oTd[i].classList.add(sClassHide);
+                }
+                addAfficher(listToHide[j]);
+            }
+        }
         //Pour affichage ou pas des colonnes visible
         var delC =null, oTh =  null;
         document.addEventListener('DOMContentLoaded',function(){
@@ -192,7 +241,6 @@
                 oTh[i].addEventListener('click',  supprimerColonne);
             }
         });
-        
         function supprimerColonne(oEvent){
             var sClassHide = 'cel-hide',oEle = oEvent.currentTarget,
                 oTable = oEle.parentNode.parentNode.parentNode,
@@ -205,7 +253,6 @@
             oEle.classList.add(sClassHide);
             addAfficher(iIndex);
         }
-        
         function names(iIndex){
             let res;
             switch(iIndex){
@@ -219,48 +266,51 @@
                     res = "societe";
                     break;
                 case 4:
-                    res = "nomPrenom";
+                    res ="alias";
                     break;
                 case 5:
-                    res = "adresse1";
+                    res = "nomPrenom";
                     break;
                 case 6:
-                    res = "adresse2";
+                    res = "adresse1";
                     break;
                 case 7:
-                    res = "cpostal";
-                    break;
-                case 8:
-                    res = "ville";
+                    res = "adresse2";
                     break;
                 case 9:
-                    res = "pays";
+                    res = "cpostal";
                     break;
                 case 10:
-                    res = "telephone";
+                    res = "ville";
                     break;
                 case 11:
-                    res = "portable";
+                    res = "pays";
                     break;
                 case 12:
-                    res = "site";
+                    res = "telephone";
                     break;
                 case 13:
-                    res = "email";
+                    res = "portable";
                     break;
                 case 14:
-                    res = "nTVA";
+                    res = "site";
                     break;
                 case 15:
-                    res = "tauxTVA";
+                    res = "email";
                     break;
                 case 16:
-                    res = "langue";
+                    res = "nTVA";
                     break;
                 case 17:
-                    res = "remarques";
+                    res = "tauxTVA";
                     break;
                 case 18:
+                    res = "langue";
+                    break;
+                case 19:
+                    res = "remarques";
+                    break;
+                case 20:
                     res = "tauxEchange";
                     break;
                 default:

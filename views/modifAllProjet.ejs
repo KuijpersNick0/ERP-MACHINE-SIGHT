@@ -5,17 +5,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/css/style.css"/>
-    <title>Ajout projet</title>
+    <title>Modifier projet</title>
 </head>
 <body>
-    <h1> Ajout projet </h1>
+    <h1> Modifier mes elements projet </h1>
     <h2> Entrer vos informations </h2>
     <a class ="bouton" href="/projet">Retourner à liste projet</a>
     
-    <form action ="/projet/ajoutProjet" method="POST">
-        <p>
-            <label>idProjet : <input type="text" name="idProjet" required="true" maxlength="45" /> </label>
-        </p>
+    <form action ="/projet/modifAllProjet" method="POST">
         <p>
             <label>Nom : <input type="text" name="nom"  maxlength="45"/> </label>
         </p>
