@@ -22,6 +22,8 @@ let fournisseurController = require('./controllers/fournisseurController');
 let bonCommandeController = require('./controllers/bonCommandeController');
 let nomenclatureController = require('./controllers/nomenclatureController');
 let userController = require('./controllers/userController');
+let clientController = require('./controllers/clientController');
+let pagePersoController = require('./controllers/pagePersoController');
 
 //utilisation session log-in
 let session = require('express-session');
@@ -35,35 +37,39 @@ router.use(session({
 router.get('/', (req, res) => res.redirect('/connection'));
 
 router.get('/projet', projetController.projetList);
-router.get('/projet/fournisseur', projetController.goToFournisseur);
-router.get('/projet/bonCommande', projetController.goToBonCommande);
-router.get('/projet/nomenclature', projetController.goToNomenclature);
+router.post('/projet/selectAll', projetController.selectAll);
+router.get('/projet/modifAllForm',projetController.modifAllForm);
+router.post('/projet/modifAllProjet', projetController.modifAllProjet);
 router.get('/projet/ajoutProjet', projetController.ajoutProjetForm);
 router.post('/projet/ajoutProjet', projetController.ajoutProjet);
+router.get('/projet/majPrixTotal', projetController.majPrixTotal);
 router.post('/projet/inter/modification', projetController.projetModification);
 router.get('/projet/:index', projetController.deleteProjet);
 
 router.get('/fournisseurs', fournisseurController.fournisseurList);
-router.get('/fournisseurs/projet', fournisseurController.goToProjet);
-router.get('/fournisseurs/bonCommande', fournisseurController.goToBonCommande);
-router.get('/fournisseurs/nomenclature', fournisseurController.goToNomenclature);
+router.post('/fournisseurs/selectAll', fournisseurController.selectAll);
+router.get('/fournisseurs/modifAllForm',fournisseurController.modifAllForm);
+router.post('/fournisseurs/modifAllFournisseur', fournisseurController.modifAllFournisseur);
 router.get('/fournisseurs/ajoutFournisseur', fournisseurController.ajoutFournisseurForm);
 router.post('/fournisseurs/ajoutFournisseur', fournisseurController.ajoutFournisseur);
 router.post('/fournisseurs/inter/modification', fournisseurController.fournisseurModification);
 router.get('/fournisseurs/:index', fournisseurController.deleteFournisseur);
 
 router.get('/bonCommande', bonCommandeController.bonCommandeList);
-router.get('/bonCommande/projet', bonCommandeController.goToProjet);
-router.get('/bonCommande/fournisseur', bonCommandeController.goToFournisseur);
-router.get('/bonCommande/nomenclature', bonCommandeController.goToNomenclature);
+router.post('/bonCommande/selectAll', bonCommandeController.selectAll);
+router.get('/bonCommande/modifAllForm',bonCommandeController.modifAllForm);
+router.post('/bonCommande/modifAllBonCommande', bonCommandeController.modifAllBonCommande);
 router.post('/bonCommande/enregistrement', bonCommandeController.enregistrementBonCommande);
 router.post('/bonCommande/inter/modification', bonCommandeController.bonCommandeModification);
 
 router.get('/nomenclature', nomenclatureController.nomenclatureList);
-router.get('/nomenclature/fournisseur', nomenclatureController.goToFournisseur);
-router.get('/nomenclature/bonCommande', nomenclatureController.goToBonCommande);
-router.get('/nomenclature/projet', nomenclatureController.goToProjet);
 router.get('/nomenclature/resetPanier', nomenclatureController.resetPanier);
+router.post('/nomenclature/selectAll', nomenclatureController.selectAll);
+router.get('/nomenclature/modifAllForm',nomenclatureController.modifAllForm);
+router.post('/nomenclature/modifAllNomenclature', nomenclatureController.modifAllNomenclature);
+router.get('/nomenclature/majPrixTotal', nomenclatureController.majPrixTotal);
+router.get('/nomenclature/ajoutNomenclature', nomenclatureController.ajoutNomenclatureForm);
+router.post('/nomenclature/ajoutNomenclature', nomenclatureController.ajoutNomenclature);
 router.get('/nomenclature/inter/commandePDF', nomenclatureController.nomenclatureToPDF)
 router.post('/nomenclature/inter/modification', nomenclatureController.nomenclatureModification);
 router.post('/nomenclature/inter/ajoutPDF', nomenclatureController.nomenclatureAjoutPDF);
@@ -71,6 +77,10 @@ router.get('/nomenclature/:index', nomenclatureController.nomenclatureAjoutListe
 
 router.get('/connection', userController.connection);
 router.post('/connection/login', userController.login);
+
+router.get('/client', clientController.clientList);
+
+router.get('/pagePerso/projet/:index', pagePersoController.projetPage);
 
 //gere le stockage local pour upload nomenclature
 var storage = multer.diskStorage({
@@ -86,57 +96,99 @@ var upload = multer({storage: storage });
 router.use(express.json({limit :'1mb'}));
 
 // upload csv to database
-router.post('/upload-avatar', upload.single("fileUpload"), (req, res) =>{
-    UploadCsvDataToMySQL(__dirname + '/uploads/' + req.file.filename);
+router.post('/upload', upload.single("fileUpload"), (req, res) =>{
+    let par = req.session.user;
+    let fkUser;
+    const sqlSelect = "SELECT pkUser FROM user WHERE pseudo=?;";
+    const select_query = connection.format(sqlSelect, [par]);
+    //Determine fkUser
+    if (par==null || par==undefined){
+        fkUser = 1; //NUMERO SI PAS CONNECTE
+        UploadCsvDataToMySQL(__dirname + '/uploads/' + req.file.filename, fkUser);
+    } else{
+        get_fkUser = function(){
+            //Eviter js callback hell
+            return new Promise(function(resolve, reject){
+                connection.query(select_query, (error, resultSQL) => {
+                    if (error) throw error;
+                    else if (resultSQL.length!=0) {
+                        resolve(resultSQL[0].pkUser);
+                    } else {
+                        reject(new Error("No result"));
+                    }
+                })
+            })
+        }
+        get_fkUser()
+        .then(function(result){
+            fkUser = result;
+            UploadCsvDataToMySQL(__dirname + '/uploads/' + req.file.filename, fkUser);
+        })
+        .catch(function(error){
+            console.log("Promise rejection error: " + error);
+        })
+    }
     res.redirect('/nomenclature');
     });
-function UploadCsvDataToMySQL(filePath){
+function UploadCsvDataToMySQL(filePath, fkUser){
+    if (filePath.charCodeAt(0) === 0xFEFF) {
+        //Fichier excell en UTF8-BOM et non pas UTF8, ce if strip le BOM qui génere caractère défectueux
+        filePath = stream.substr(filePath);
+    }
     let stream = fs.createReadStream(filePath);
     let csvData = [];
     let csvStream = csv
-        .parse()
-        .on('error', () => {
-            console.log("Fichier csv illisible");
-        })
-        .on("data", (row) => {
-            let dataGoodFormat = true;
-            if (row.length == 11){
-                for (var i=0; i<row.length; i++){
-                    if (row[i].length<45){
-                        console.log("data bonne taille");
-                    } else {
-                        console.log("Element de colonnes dépasse les 45 caractères authorisé");
-                        csvData.length = 0;
-                        dataGoodFormat = false;
-                        break;
-                    }
+    .parse()
+    .on('error', () => {
+        console.log("Fichier csv illisible");
+    })
+    .on("data", (row) => {
+        let dataGoodFormat = true;
+        if (row.length == 11){
+            for (var i=0; i<row.length; i++){
+                if (row[i].length<45){
+                    console.log("data bonne taille");
+                } else {
+                    console.log("Element de colonne dépasse les 45 caractères authorisé");
+                    csvData.length = 0;
+                    dataGoodFormat = false;
+                    break;
                 }
-                if (dataGoodFormat){
-                    csvData.push(row);
+            }
+            if (dataGoodFormat){ 
+                row.push(fkUser);
+                csvData.push(row);
+            }
+        } else {
+            console.log("Erreur pas les bonnes dimensions colonnes mysql")
+        }
+    })
+    .on("end", function () {
+        // Remove Header ROW
+        csvData.shift();
+        if (csvData.length>0){
+            let query = 'INSERT INTO nomenclature (idPiece, denomination, qte, aliasFournisseur, matiere, brut, realisation, finition, refFournisseur, idProjet, idNomenclature, fkUser) VALUES ? ON DUPLICATE KEY UPDATE idNomenclature = idNomenclature';
+            connection.query(query, [csvData], async (error, response) => {
+                if (error){
+                    console.log(error);
                 }
-            } else {
-                console.log("Erreur pas les bonnes dimensions colonnes mysql")
-            }
-        })
-        .on("end", function () {
-            // Remove Header ROW
-            csvData.shift();
-            if (csvData.length != 0 ){
-                let query = 'INSERT INTO nomenclature (idPiece, denomination, qte, fournisseur, matiere, brut, realisation, finition, refFournisseur, idProjet1, idNomenclature) VALUES ? ON DUPLICATE KEY UPDATE idNomenclature = idNomenclature';
-                connection.query(query, [csvData], (error, response) => {
-                    if (error){
-                        console.log(error);
-                    }
-                    else{
-                        console.log('CSV file data has been uploaded in mysql database');
-                    }
-                });
-            } else {
-                console.log("Donnée dans le mauvais format");
-            }
-            // On delete apres avoir enregistrer le fichier
-            fs.unlinkSync(filePath)
-        }); 
+                else{
+                    console.log('CSV file data has been uploaded in mysql database');
+                    await connection.query("call nomenclature_fournisseur_upload();", (error, response) => {
+                        if (error) throw error;
+                        else {
+                            console.log('MAJ lien fournisseur-nomenclature');
+                        }
+                    })
+
+                }
+            });
+        } else {
+            console.log("Donnée dans le mauvais format");
+        }
+        // On delete apres avoir enregistrer le fichier
+        fs.unlinkSync(filePath)
+    }); 
     stream.pipe(csvStream);
 }   
 module.exports = router;
