@@ -17,11 +17,13 @@
         <a class ="bouton" href="/projet">Liste projets</a>
         <a class ="bouton" href="/bonCommande">Liste bons commande</a>
         <a class ="bouton" href="/nomenclature">Liste nomenclatures</a>
+        <a class= "bouton" href="/client"> Liste clients</a>
         <a class ="bouton" href="/connection">Connection</a>
     </div>
 
     <a class ="bouton" href="/fournisseurs/ajoutFournisseur">Ajouter fournisseur</a>
     <a class ="bouton" href="javascript:void(0)" onclick="selectAll()">Selectionner tout</a>
+    <a class ="bouton" href="/fournisseurs/resetAll">Reset panier modif</a>
     <a class ="bouton" href="/fournisseurs/modifAllForm">Modifier panier tout</a>
     <a class ="bouton" href="javascript:void(0)" onclick="viewEco()">Vue economie</a>
 
@@ -194,8 +196,8 @@
             let idFournisseurs = [];
             if (document.readyState !== 'loading') {
             // Attendre que elements soient chargé
-            table = document.getElementById("myTable");
-            tr = table.getElementsByTagName("tr");
+                table = document.getElementById("myTable");
+                tr = table.getElementsByTagName("tr");
             for (var i=1; i<tr.length; i++){
                 //Parcourir tag tr et boucle condit sur if
                 let elem = 0;
@@ -215,7 +217,8 @@
             fetch('./fournisseurs/selectAll', options);
             }
         }
-
+        
+        let viewOK = true;
         function viewEco(){
             //view personnalisé des colonnes
             let listToHide = [4,5,6,7,8,9,10,13,14]
@@ -228,10 +231,14 @@
                 for (var i=0; i<oTd.length; i++){
                     oTd[i].classList.add(sClassHide);
                 }
-                addAfficher(listToHide[j]);
+                if (viewOK){
+                    addAfficher(listToHide[j]);
+                }
             }
+            viewOK=false;
         }
-        //Pour affichage ou pas des colonnes visible
+
+        //Pour affichage ou pas des colonnes 
         var delC =null, oTh =  null;
         document.addEventListener('DOMContentLoaded',function(){
             //reperage click

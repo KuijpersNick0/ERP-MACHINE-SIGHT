@@ -18,18 +18,16 @@
         <a class ="bouton" href="/fournisseurs">Liste fournisseurs</a>
         <a class ="bouton" href="/bonCommande">Liste bons commande</a>
         <a class ="bouton" href="/projet">Liste projets</a>
+        <a class= "bouton" href="/client"> Liste clients</a>
         <a class ="bouton" href="/connection">Connection</a>
     </div>
 
     <a class ="bouton" href="/nomenclature/resetPanier">Reset panier BDC </a>
-    <a class ="bouton" href="/nomenclature/inter/commandePDF"> Génèrer BDC </a>
-    <a class ="bouton" onclick= ajoutePDF() >Add réference </a>
+    <a class ="bouton" href="/nomenclature/inter/commandePDF" > Génèrer BDC </a> 
     <a class ="bouton" href="javascript:void(0)" onclick="selectAll()">Select all</a>
     <a class ="bouton" href="/nomenclature/modifAllForm">Modifier all</a>
     <a class="bouton" href="/nomenclature/majPrixTotal">MAJ prix total</a>
     <a class="bouton" href="/nomenclature/ajoutNomenclature">Add NMCLTRE</a>
-    
-    <label for="reference">Reference :</label> <input id="reference" type="text" name="reference" placeholder="Inserer reference bon commande" />
 
     <label for="selectionRecherche">Choisir filtre </label>
     <select name="selectionRecherche" id="selectionRecherche">
@@ -37,18 +35,39 @@
         <option value="1">idNomenclature</option>
         <option value="2">idPiece</option>
         <option value="3">denomination</option>
-        <option value="4">n_piece_plan</option>
-        <option value="5">rev</option>
+        <option value="4">rev</option>
         <option value="8">matiere</option>
         <option value="14">fournisseur</option>
         <option value="15">refDescriptionFournisseur</option>
-        <option value="21">prixtotalclient</option>
-        <option value="23">statut</option>
-        <option value="26">numProjet</option>
-        <option value="27">nomProjet</option>
-        <option value="28">client</option>
+        <option value="18">idBonCommande</option>
+        <option value="20">nomProjet</option>
+        <option value="21">client</option>
+        <option value="22">idFournisseur</option>
+        <option value="30">refCommande</option>
+        <option value="32">par</option>
+        <option value="33">spare parts</option>
     </select>
-    <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for..">
+    <input type="text" id="myInput" onkeyup="filterFunction()" placeholder="Search for..">
+    
+    <label for="selectionRecherche2">Choisir filtre 2 </label>
+    <select name="selectionRecherche2" id="selectionRecherche2">
+        <label>Choissir colonne de filtre</label>
+        <option value="1">idNomenclature</option>
+        <option value="2">idPiece</option>
+        <option value="3">denomination</option>
+        <option value="4">rev</option>
+        <option value="8">matiere</option>
+        <option value="14">fournisseur</option>
+        <option value="15">refDescriptionFournisseur</option>
+        <option value="18">idBonCommande</option>
+        <option value="20">nomProjet</option>
+        <option value="21">client</option>
+        <option value="22">idFournisseur</option>
+        <option value="30">refCommande</option>
+        <option value="32">par</option>
+        <option value="33">spare parts</option>
+    </select>
+    <input type="text" id="myInput2" onkeyup="filterFunction2()" placeholder="Search for..">
 
     <form action="/upload" enctype="multipart/form-data" method="post">
         <label style="font-weight:bold;">Upload nomenclature</label>
@@ -93,6 +112,7 @@
                 <th>refCommande</th>
                 <th>montantDepense</th>
                 <th>par</th>
+                <th>spare parts</th>
             </tr>
             <% for (var i=0; i<nomenclature.length; i++){ %>
             <tr>
@@ -147,8 +167,12 @@
                     <td contenteditable='true' id="<%=i%>" class="livraisonPrevue">
                         <%=nomenclature[i].livraisonPrevue %> 
                     </td>
-                    <td contenteditable='true' id="<%=i%>" class="statut">
-                        <%=nomenclature[i].statut %> 
+                    <td>    
+                        <select name="<%=nomenclature[i].statut%>" class="statut" id="<%=i%>" onchange="changeStatut(this, <%=i%>)">
+                            <option></option>
+                            <option id="prevu<%=i%>"> prevu</option>
+                            <option id="recept<%=i%>"> recept</option>
+                        </select>
                     </td>
                     <td contenteditable='true' id="<%=i%>" class="idBonCommande">
                         <%=nomenclature[i].idBonCommande %> 
@@ -195,6 +219,9 @@
                     <td contenteditable='true' id="<%=i%>" class="par" >
                         <%=nomenclature[i].par %> 
                     </td>
+                    <td>
+                        <input type="checkbox" name="<%=nomenclature[i].spareParts%>" class="spareParts" id="spareParts<%=i%>" onchange="changeSpareParts(this, <%=i%>)" value="checked" >
+                    </td>
             </tr>
             <% } %> 
     </table>
@@ -213,20 +240,53 @@
         }
 
         window.onload = function() {
-            //alert("let's go!");
             let statut = document.getElementsByClassName("statut");
+            let spareParts = document.getElementsByClassName("spareParts");
+            //Gere la couleur de statut / DEUXIEME FOR  
             let livraisonPrevue = document.getElementsByClassName("livraisonPrevue");
             let dateLivraison = [];
             let date = new Date();
+            
+            //Deplace le selected pour natureProjet de options sur données BDD 
+            for (var i=0; i<statut.length; i++){
+                let name = statut[i].getAttribute("name");
+                let myID = statut[i].getAttribute("id");
+                let mySelected;  
+                switch (name) {
+                    case "prevu": 
+                        mySelected = document.getElementById("prevu"+myID);
+                        mySelected.selected = true
+                        break;
+                    case "recept":
+                        mySelected = document.getElementById("recept"+myID);
+                        mySelected.selected = true
+                        break;
+                    default:
+                        console.log("Pas la bonne valeur statut");
+                }
+            }
+            //Deplace le checked pour spareParts sur données BDD 
+            for (var i=0; i<spareParts.length; i++){
+                let nameSpareParts = spareParts[i].getAttribute("name")
+                let idSpareParts = spareParts[i].getAttribute("id")
+                let myChecked;
+                switch (nameSpareParts) {
+                    case "checked":
+                        myChecked = document.getElementById(idSpareParts);
+                        myChecked.checked=true;
+                        break;
+                    default:
+                }
+            }
             for (var i=0; i<livraisonPrevue.length;i++){
                 dateLivraison.push(new Date(Date.parse(livraisonPrevue[i].innerHTML.trim())));   
-                if (dateLivraison[i]!='Invalid Date' && statut[i].innerHTML.trim()!="recept"){
+                if (dateLivraison[i]!='Invalid Date' && statut[i].getAttribute("name")!="recept"){
                     if (date<=dateLivraison[i]){
                         statut[i].style.backgroundColor="orange";                        
                     } else {
                         statut[i].style.backgroundColor="red";
                     }
-                }else if (statut[i].innerHTML.trim()=="recept") {
+                }else if (statut[i].getAttribute("name")=="recept") {
                     statut[i].style.backgroundColor="lightgreen";                        
                 }
             }
@@ -259,20 +319,7 @@
             }
         }
 
-        function ajoutePDF() {
-            let reference = document.getElementById("reference").value;
-            data = {reference};
-            const options = {
-                    method: 'POST',
-                    headers: {
-                    'Content-Type':'application/json'
-                    },
-                body: JSON.stringify(data)
-                };
-            fetch('./nomenclature/inter/ajoutPDF', options);
-        }
-
-        function myFunction() {
+        function filterFunction() {
             // fonction filtre-recherche
             var input, filter, table, tr, td, i, txtValue;
             input = document.getElementById("myInput");
@@ -280,15 +327,61 @@
             table = document.getElementById("myTable");
             tr = table.getElementsByTagName("tr");
             a = document.getElementById("selectionRecherche").value;
-            // Loop tr
-            for (i = 0; i < tr.length; i++) {
-                td = tr[i].getElementsByTagName("td")[a];
-                if (td) {
-                    txtValue = td.textContent || td.innerText;
-                    if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                    tr[i].style.display = "";
+            if (a==33){
+                //spare parts, checkbox: chiant avec value
+                let test = document.getElementsByClassName("spareParts");
+                for (var j=0; j<test.length; j++){
+                    if (test[j].name=="checked"){
+                        tr[j].style.display = "";
                     } else {
-                    tr[i].style.display = "none";
+                        tr[j].style.display = "none";
+                    }
+                }
+            }else {
+                // Loop tr
+                for (i = 0; i < tr.length; i++) {
+                    td = tr[i].getElementsByTagName("td")[a];
+                    if (td) {
+                        txtValue = td.textContent || td.innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            tr[i].style.display = "";
+                        } else {
+                            tr[i].style.display = "none";
+                        }
+                    }
+                }
+            }
+        }
+
+        function filterFunction2() {
+            // fonction filtre-recherche
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById("myInput2");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("myTable");
+            tr = table.getElementsByTagName("tr");
+            a = document.getElementById("selectionRecherche2").value;
+            if (a==33){
+                //spare parts, checkbox: chiant avec value
+                let test = document.getElementsByClassName("spareParts");
+                for (var j=0; j<test.length; j++){
+                    if (test[j].name=="checked"){
+                        tr[j].style.display = "";
+                    } else {
+                        tr[j].style.display = "none";
+                    }
+                }
+            }else {
+                // Loop tr
+                for (i = 0; i < tr.length; i++) {
+                    td = tr[i].getElementsByTagName("td")[a];
+                    if (td) {
+                        txtValue = td.textContent || td.innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            tr[i].style.display = "";
+                        } else {
+                            tr[i].style.display = "none";
+                        }
                     }
                 }
             }
@@ -314,7 +407,51 @@
                 e.stopPropagation();
             }, false);       
         }
-        
+
+        function changeStatut(selectObject, id){
+            const newData = selectObject.value;  
+            let stringID = 'idNomenclature' + id;
+            const myID = document.getElementById(stringID).innerHTML;
+            const myColumn = "statut";
+            const data = {newData, myID, myColumn};
+                const options = {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type':'application/json'
+                    },
+                body: JSON.stringify(data)
+                };
+                fetch('./nomenclature/inter/modification', options);
+        }
+
+        function checkBoxData(newValue, oldValue, id){
+            //Checkbox n'a qu'une seule valeur de retour (check ou uncheck)
+            let elemSpareParts = document.getElementById("spareParts"+id);
+            if (newValue==oldValue){
+                elemSpareParts.name = "";
+                return ""
+            } else {
+                elemSpareParts.name = "checked";
+                return "checked"
+            }
+        }
+
+        function changeSpareParts(selectObject, id){
+            let stringID = 'idNomenclature' + id;
+            const myID = document.getElementById(stringID).innerHTML;
+            const newData = checkBoxData(selectObject.value, selectObject.name, id); 
+            const myColumn = "spareParts";
+            const data = {newData, myID, myColumn};
+            const options = {
+                method: 'POST',
+                headers: {
+                'Content-Type':'application/json'
+                },
+            body: JSON.stringify(data)
+            };
+            fetch('./nomenclature/inter/modification', options);
+        }
+
         //Pour affichage ou pas des colonnes visible
         var delC =null, oTh =  null;
         document.addEventListener('DOMContentLoaded',function(){

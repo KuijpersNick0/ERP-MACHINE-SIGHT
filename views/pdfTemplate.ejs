@@ -238,7 +238,7 @@
                 <p style="text-indent: 0pt;text-align: left;"><br/></p>
             </td>
             <td style="width:187pt;border-top-style:solid;border-top-width:1pt">
-                <p class="s10" style="padding-top: 5pt;padding-left: 49pt;text-indent: 0pt;text-align: left;"  name="reference">Vos références : <b name="reference" id="reference"><%=reference%></b></p>
+                <p class="s10" style="padding-top: 5pt;padding-left: 49pt;text-indent: 0pt;text-align: left;"  name="reference">Vos références : <b name="reference" id="reference"></b></p>
             </td>
             <td style="width:115pt;border-top-style:solid;border-top-width:1pt">
                 <p style="text-indent: 0pt;text-align: left;"><br/></p>
@@ -399,6 +399,9 @@
     <button id="printPageButton" onclick="window.location='../../nomenclature';" style="padding:1pt; position: relative; bottom: -150px; left: 10px; right: 5px;">Retourner liste nomenclature</button>
     <button id="printPageButton" class ="bouton" onclick= ajouteBonCommande() method="POST" style="padding: 1pt; margin-left: 50pt; position: relative; bottom: -150px; left: 10px; right: 5px;" >Enregistrement bon de commande</button>
 
+    <input id="printPageButton" class="referenceInput" type="text" name="reference" placeholder="Inserer reference BDC" />
+    <button id="printPageButton" class="bouton" onclick= ajouteReference() >Ajouter réference </button>
+
     <script charset="utf-8" >
         function ajouteBonCommande() {
             let idBonCommande = '<%=idBonCommande%>';
@@ -425,6 +428,7 @@
                 };
             fetch('../../bonCommande/enregistrement', options);
         }
+
         const copyToClipBoard = function(){
             var target = document.getElementById("commande").innerHTML + "-" + "<%=fournisseur.listeFournisseur%>" + "-" + "<%=nomenclatureElemPDF[0].idProjet%>";
             const tempArea = document.createElement('textarea');
@@ -434,6 +438,28 @@
             document.execCommand('copy');
             document.body.removeChild(tempArea);
         }
+
+        let iterate = parseInt('<%=iterate%>');
+        //Pour afficher next bon de commande associé au fournisseur
+        window.onload = function(){
+            if (iterate>1){
+                if (confirm("Voulez vous ouvrir le BDC du prochain fournisseur?")){
+                    var href = '/nomenclature/inter/commandePDF';
+                    window.open(href); 
+                } else{
+                    console.log("canceled");
+                } 
+            }
+            else{
+            console.log("canceled");
+            }
+        }
+        function ajouteReference() {
+            let referenceInput = document.getElementsByClassName("referenceInput")[0].value;
+            let reference = document.getElementById("reference");
+            reference.innerHTML = referenceInput;
+        }
+
     </script>
 </body>
 </html>
