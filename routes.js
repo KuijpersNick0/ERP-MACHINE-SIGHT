@@ -48,6 +48,7 @@ router.get('/projet/:index', projetController.deleteProjet);
 
 router.get('/fournisseurs', fournisseurController.fournisseurList);
 router.post('/fournisseurs/selectAll', fournisseurController.selectAll);
+router.get('/fournisseurs/resetAll', fournisseurController.resetAll);
 router.get('/fournisseurs/modifAllForm',fournisseurController.modifAllForm);
 router.post('/fournisseurs/modifAllFournisseur', fournisseurController.modifAllFournisseur);
 router.get('/fournisseurs/ajoutFournisseur', fournisseurController.ajoutFournisseurForm);
@@ -61,6 +62,7 @@ router.get('/bonCommande/modifAllForm',bonCommandeController.modifAllForm);
 router.post('/bonCommande/modifAllBonCommande', bonCommandeController.modifAllBonCommande);
 router.post('/bonCommande/enregistrement', bonCommandeController.enregistrementBonCommande);
 router.post('/bonCommande/inter/modification', bonCommandeController.bonCommandeModification);
+router.get('/bonCommande/:index', bonCommandeController.deleteBonCommande);
 
 router.get('/nomenclature', nomenclatureController.nomenclatureList);
 router.get('/nomenclature/resetPanier', nomenclatureController.resetPanier);
@@ -70,9 +72,8 @@ router.post('/nomenclature/modifAllNomenclature', nomenclatureController.modifAl
 router.get('/nomenclature/majPrixTotal', nomenclatureController.majPrixTotal);
 router.get('/nomenclature/ajoutNomenclature', nomenclatureController.ajoutNomenclatureForm);
 router.post('/nomenclature/ajoutNomenclature', nomenclatureController.ajoutNomenclature);
-router.get('/nomenclature/inter/commandePDF', nomenclatureController.nomenclatureToPDF)
 router.post('/nomenclature/inter/modification', nomenclatureController.nomenclatureModification);
-router.post('/nomenclature/inter/ajoutPDF', nomenclatureController.nomenclatureAjoutPDF);
+router.get('/nomenclature/inter/commandePDF', nomenclatureController.nomenclatureToPDF)
 router.get('/nomenclature/:index', nomenclatureController.nomenclatureAjoutListePDF);
 
 router.get('/connection', userController.connection);
@@ -187,7 +188,7 @@ function UploadCsvDataToMySQL(filePath, fkUser){
             console.log("Donnée dans le mauvais format");
         }
         // On delete apres avoir enregistrer le fichier
-        fs.unlinkSync(filePath)
+    fs.unlinkSync(filePath)
     }); 
     stream.pipe(csvStream);
 }   
