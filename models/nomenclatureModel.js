@@ -1,6 +1,6 @@
 class Nomenclature {
     constructor(pkNomenclature, idNomenclature, idPiece, denomination, idProjet, rev, qte, unite, matiere, brut, realisation, finition, traitementDeSurface, planEdite, fournisseur, refFournisseur, livraisonPrevue, statut, idBonCommande, commentaire, nomProjet, client, 
-        idFournisseur, prixUnitMS, prixUnitClient, remise, prixNetTotal, marge, prixTotalClient, effectue, refCommande, montantDepense, par, fkProjet, fkBonCommande, fkFournisseur, fkClient, fkUser){  
+        idFournisseur, prixUnitMS, prixUnitClient, remise, prixNetTotal, marge, prixTotalClient, effectue, refCommande, montantDepense, par, fkProjet, fkBonCommande, fkFournisseur, fkClient, fkUser, spareParts){  
         this.pkNomenclature = pkNomenclature;
         this.idNomenclature = idNomenclature;
         this.idPiece = idPiece;
@@ -39,7 +39,7 @@ class Nomenclature {
         this.fkBonCommande =fkBonCommande ;
         this.fkUser = fkUser;
         this.fkClient =fkClient ;
-
+        this.spareParts = spareParts;
     }   
 }
 module.exports = Nomenclature;
