@@ -11,14 +11,13 @@ let nomenclatureList = [];
 let nomenclatureListPDF = [];
 let nomenclatureDejaInscrit = [];
 let monFournisseur;
-let monFournisseurID;
-let reference; 
 let monPseudo;
 let monUser;
 let monProjet;
 let monProjetID;
 let idBonCommandeTemp;
 let idNomenclatures = [];
+let dictFournisseurNMCLT = {};
 
 exports.nomenclatureList = async function(request, response){
     //affiche la liste des projet
@@ -27,7 +26,7 @@ exports.nomenclatureList = async function(request, response){
     const procedure_query = connection.format(sqlProcedure);
     const sqlSelect = "SELECT * FROM nomenclature_view";
     const select_query = connection.format(sqlSelect);
-
+    
     await connection.query(procedure_query, async (error0, resultSQL0) => {
         if (error0){
             console.log(error0);
@@ -40,19 +39,23 @@ exports.nomenclatureList = async function(request, response){
                         let nomenclature = new Nomenclature(resultSQL[i].pkNomenclature, resultSQL[i].idNomenclature, resultSQL[i].idPiece,resultSQL[i].denomination,resultSQL[i].idProjet,resultSQL[i].rev,resultSQL[i].qte,resultSQL[i].unite,resultSQL[i].matiere,
                             resultSQL[i].brut,resultSQL[i].realisation,resultSQL[i].finition,resultSQL[i].traitementDeSurface,resultSQL[i].planEdite,resultSQL[i].fournisseur, resultSQL[i].refFournisseur,resultSQL[i].livraisonPrevue,resultSQL[i].statut
                             ,resultSQL[i].idBonCommande, resultSQL[i].commentaire,resultSQL[i].nomProjet,resultSQL[i].client,resultSQL[i].idFournisseur,resultSQL[i].prixUnitMS,resultSQL[i].prixUnitClient,resultSQL[i].remise,resultSQL[i].prixNetTotal,resultSQL[i].marge
-                            ,resultSQL[i].prixTotalClient, resultSQL[i].effectue,resultSQL[i].refCommande,resultSQL[i].montantDepense,resultSQL[i].par, resultSQL[i].fkProjet, resultSQL[i].fkBonCommande, resultSQL[i].fkFournisseur, resultSQL[i].fkClient, resultSQL[i].fkUser);
-                        nomenclatureList.push(nomenclature);
+                            ,resultSQL[i].prixTotalClient, resultSQL[i].effectue,resultSQL[i].refCommande,resultSQL[i].montantDepense,resultSQL[i].par, resultSQL[i].fkProjet, resultSQL[i].fkBonCommande, resultSQL[i].fkFournisseur, resultSQL[i].fkClient, resultSQL[i].fkUser, resultSQL[i].spareParts);
+                            nomenclatureList.push(nomenclature);
+                        }
+                        response.render('nomenclature.ejs', {nomenclature:resultSQL}); 
                     }
-                    response.render('nomenclature.ejs', {nomenclature:resultSQL}); 
-                }
             })
         }
     })
 };
 
-exports.nomenclatureAjoutListePDF = function(req, res) {
+exports.nomenclatureAjoutListePDF = async function(req, res) {
     //Ajout dans une liste locale les elements sélectionnées pour ensuite les afficher dans mon PDF
     let id = req.params.index;
+    const myFournisseurSet = new Set();
+    let mesFournisseur = await fournisseurController0.getFournisseur();
+    dictFournisseurNMCLT = {};
+    
     for (var i=0; i<nomenclatureList.length; i++){
         if (id==nomenclatureList[i].idNomenclature){
             let monIndex = i;
@@ -67,10 +70,29 @@ exports.nomenclatureAjoutListePDF = function(req, res) {
             }
         } 
     }
+    for (var i=0;i<nomenclatureListPDF.length;i++){
+        for (var j=0; j<mesFournisseur.length; j++){
+            if (nomenclatureListPDF[i].idFournisseur==mesFournisseur[j].idFournisseur){
+                myFournisseurSet.add(mesFournisseur[j].alias)
+            }
+        }
+    }
+    myFournisseurArray =[...myFournisseurSet];
+    for (var j=0; j<nomenclatureListPDF.length;j++){
+        for (var i=0;i<myFournisseurArray.length;i++){
+            if (nomenclatureListPDF[j].fournisseur==myFournisseurArray[i]){
+                if (myFournisseurArray[i] in dictFournisseurNMCLT ) {
+                    dictFournisseurNMCLT[myFournisseurArray[i]].push(nomenclatureListPDF[j]);
+                } else{
+                    dictFournisseurNMCLT[myFournisseurArray[i]] = [nomenclatureListPDF[j]];
+                }
+            }
+        }
+    }
     res.redirect('/nomenclature');
 }
 
-nomenclatureGetidBonCommandeTemp = function(request, response){
+exports.nomenclatureGetidBonCommandeTemp = function(request, response){
     //Recuperer dernier idboncommande incrementé afin de le génerer en visualisation pdf sans confirmation d'insert sql (Auto increment)
     idBonCommandeTemp = 0;
     return new Promise((resolve, reject) => {
@@ -85,6 +107,17 @@ nomenclatureGetidBonCommandeTemp = function(request, response){
     })
 }
 
+exports.resetPanier = function(request, response){
+    //apres une modification les articles mis ne sont pas remis a jour, ce bouton reset le panier à 0
+    nomenclatureListPDF.length = 0;
+    monFournisseur = 0;
+    nomenclatureDejaInscrit.length=0;
+    monProjet=0;
+    monProjetID=0;
+    idBonCommandeTemp='init';
+    console.log("Reset effectué");
+}
+
 exports.nomenclatureToPDF = async function(request, response){
     //Gere le print PDF avec la liste générée par nomenclatureAjoutListePDF
     if(nomenclatureListPDF.length==0){
@@ -93,20 +126,21 @@ exports.nomenclatureToPDF = async function(request, response){
     }
     else if (request.session.user == null){
         console.log("Veuillez vous connecter d'abord");
-    }else{
+        response.redirect('/connection');
+    }else {
         let mesFournisseur = await fournisseurController0.getFournisseur();
-        monFournisseurID = nomenclatureListPDF[0].idFournisseur;   
         let mesUser = userController0.getUser();
-        monPseudo = request.session.user;
         let mesProjet = await projetController0.getProjet();
+        monPseudo = request.session.user;
         monProjetID = nomenclatureListPDF[0].idProjet;
-        idBonCommandeTemp = await nomenclatureGetidBonCommandeTemp();      
-        for (var i=0;i<mesFournisseur.length;i++){
-            if (monFournisseurID==mesFournisseur[i].idFournisseur){
-                //je prends seulement 1 fournisseur en compte
-                monFournisseur = mesFournisseur[i];
-                break;
-            }
+        let [firstFournisseur] = Object.keys(dictFournisseurNMCLT)
+        let valeurFournisseur = (dictFournisseurNMCLT[firstFournisseur]);
+        
+        if (idBonCommandeTemp==null || idBonCommandeTemp=='init'){
+            //Plusieurs BDC "en visualisation"
+            idBonCommandeTemp = await module.exports.nomenclatureGetidBonCommandeTemp();  
+        } else {
+            idBonCommandeTemp+=1;
         }
         for (var i=0;i<mesUser.length; i++){
             if (monPseudo==mesUser[i].pseudo){
@@ -116,16 +150,30 @@ exports.nomenclatureToPDF = async function(request, response){
         }
         for (var i=0;i<mesProjet.length;i++){
             if (monProjetID==mesProjet[i].idProjet){
+                //Pour idBonCommande qu'un seul projet..
                 monProjet = mesProjet[i];
                 break;
             }
         }
-        if (monFournisseur!=null & monUser!=null & monProjet!=null){
-            response.render('pdfTemplate.ejs', {nomenclatureElemPDF:nomenclatureListPDF, fournisseur :monFournisseur, reference :reference, user : monUser, projet: monProjet, idBonCommande: idBonCommandeTemp}); 
+        for (var j=0; j<mesFournisseur.length;j++){
+            if (firstFournisseur==mesFournisseur[j].alias){
+                monFournisseur=mesFournisseur[j];
+                break;
+            }
+        }
+        let iterate = Object.keys(dictFournisseurNMCLT).length;
+        if (monFournisseur!=null && monUser!=null && monProjet!=null && Object.keys(dictFournisseurNMCLT).length!=0){
+            response.render('pdfTemplate.ejs', {nomenclatureElemPDF:valeurFournisseur, fournisseur :monFournisseur, user : monUser, projet: monProjet, idBonCommande: idBonCommandeTemp, iterate : iterate}); 
+            //Je loop mes fournisseurs : nodejs me permet d ouvrir qu'une seule fenetre à la fois  
+            if (iterate>1){
+                delete dictFournisseurNMCLT[monFournisseur.alias];
+            }
         } else {
             console.log("Erreur element null");
+            module.exports.resetPanier()
+            response.redirect('/nomenclature');
         }
-    }
+    } 
 };
 
 exports.nomenclatureModification = async function(request, response){
@@ -138,7 +186,7 @@ exports.nomenclatureModification = async function(request, response){
         //modification sur une view de plusieurs tableaux impossible, je dois segmenter les modifications
         //Contrairement au bon de commande idFournisseur et idProjet son dans la table et modifié avec "stored procedures" mysql. 
         //Ce choix est fait car l'upload de nomenclature ne permet pas d'initier les fkeys 
-    let nomenclatureArray = ["idFournisseur", "idProjet", "denomination", "rev", "qte", "unite", "matiere" , "brut", "realisation", "finition", "traitementDeSurface", "planEdite", "livraisonPrevue", "statut", "commentaire", "prixUnitMS", "prixUnitClient", "remise", "prixNetTotal", "marge", "prixTotalClient", "effectue", "refCommande", "montantDepense", "refFournisseur"];
+    let nomenclatureArray = ["idFournisseur", "idProjet", "denomination", "rev", "qte", "unite", "matiere" , "brut", "realisation", "finition", "traitementDeSurface", "planEdite", "livraisonPrevue", "statut", "commentaire", "prixUnitMS", "prixUnitClient", "remise", "prixNetTotal", "marge", "prixTotalClient", "effectue", "refCommande", "montantDepense", "refFournisseur", "spareParts"];
     let projetArray = ["nomProjet"];
     let fournisseurArray = ["fournisseur"];
     let clientArray = ["client"];
@@ -159,6 +207,24 @@ exports.nomenclatureModification = async function(request, response){
                 console.log("modif enregistrer en bdd");
             }
         });
+        if (myColumn=="statut" && newData=="recept" && monArticle.fkBonCommande!=null){
+            //Si tout mes statuts lié au bon de commande sont en recept j'update le bon de commande en recept
+            const sqlSelect = 'SELECT (SELECT COUNT(fkBonCommande) FROM nomenclature WHERE fkBonCommande=? AND statut=?) AS sum0, (SELECT COUNT(statut) FROM nomenclature WHERE fkBonCommande=?) AS sum1 FROM nomenclature';
+            const select_query = connection.format(sqlSelect, [monArticle.fkBonCommande, newData, monArticle.fkBonCommande]);
+            const sqlUpdate = 'UPDATE boncommande SET statut=? WHERE idBonCommande=?';
+            const update_query = connection.format(sqlUpdate, [newData, monArticle.fkBonCommande]);
+            await connection.query(select_query, async (error, resultSQL) => {
+                if (error) throw error
+                else if (resultSQL[0].sum0 == resultSQL[0].sum1){
+                    await connection.query(update_query, (error, resultSQL) => {
+                        if (error) throw error;
+                        else {
+                            console.log("MAJ dans bon de commande recept all")
+                        }
+                    })
+                }
+            })
+        }
     } 
     else if(newData.length<45 && projetArray.includes(myColumn) && monArticle.fkProjet!=null) {
         switch (myColumn) {
@@ -254,24 +320,7 @@ exports.nomenclatureModification = async function(request, response){
         console.log("Caracteres maximum autorisé dépassé !")
     }
     response.redirect('/nomenclature');
-}
-
-exports.resetPanier = function(request, response){
-    //apres une modification les articles mis ne sont pas remis a jour, ce bouton reset le panier à 0
-    nomenclatureListPDF.length = 0;
-    monFournisseur = 0;
-    monFournisseurID = 0;
-    nomenclatureDejaInscrit.length=0;
-    monProjet=0;
-    monProjetID=0;
-    console.log("Reset effectué");
-    response.redirect('/nomenclature');
-}
-
-exports.nomenclatureAjoutPDF = function(request, response){
-    //information supplementaire pour generation bon de commande
-    reference = request.body.reference;
-    console.log('Reference enregistré');
+    
 }
 
 exports.selectAll = function(request, response){
@@ -368,7 +417,7 @@ exports.ajoutNomenclature = function(req, res){
     let newNomenclature = new Nomenclature(idNomenclature, idPiece, idProjet, idFournisseur);
     nomenclatureList.push(newNomenclature);
         //Rajouter check idprojet unique
-    const sqlInsert = "INSERT INTO nomenclature(idNomenclature, idPiece, idProjet, idFournisseur) VALUES (?,?,?,?)";
+    const sqlInsert = "INSERT INTO nomenclature(idNomenclature, idPiece, idProjet, idFournisseur) VALUES (?,?,?,?) ON DUPLICATE KEY UPDATE idNomenclature=idNomenclature";
     let todo = [idNomenclature, idPiece, idProjet, idFournisseur];
     connection.query(sqlInsert, todo, function(err, result){
         if (err) throw err;
@@ -397,7 +446,7 @@ exports.getNomenclature = async function(req,res){
                             let nomenclature = new Nomenclature(resultSQL[i].pkNomenclature, resultSQL[i].idNomenclature, resultSQL[i].idPiece,resultSQL[i].denomination,resultSQL[i].idProjet,resultSQL[i].rev,resultSQL[i].qte,resultSQL[i].unite,resultSQL[i].matiere,
                                 resultSQL[i].brut,resultSQL[i].realisation,resultSQL[i].finition,resultSQL[i].traitementDeSurface,resultSQL[i].planEdite,resultSQL[i].fournisseur, resultSQL[i].refFournisseur,resultSQL[i].livraisonPrevue,resultSQL[i].statut
                                 ,resultSQL[i].idBonCommande, resultSQL[i].commentaire,resultSQL[i].nomProjet,resultSQL[i].client,resultSQL[i].idFournisseur,resultSQL[i].prixUnitMS,resultSQL[i].prixUnitClient,resultSQL[i].remise,resultSQL[i].prixNetTotal,resultSQL[i].marge
-                                ,resultSQL[i].prixTotalClient, resultSQL[i].effectue,resultSQL[i].refCommande,resultSQL[i].montantDepense,resultSQL[i].par, resultSQL[i].fkProjet, resultSQL[i].fkBonCommande, resultSQL[i].fkFournisseur, resultSQL[i].fkClient, resultSQL[i].fkUser);
+                                ,resultSQL[i].prixTotalClient, resultSQL[i].effectue,resultSQL[i].refCommande,resultSQL[i].montantDepense,resultSQL[i].par, resultSQL[i].fkProjet, resultSQL[i].fkBonCommande, resultSQL[i].fkFournisseur, resultSQL[i].fkClient, resultSQL[i].fkUser, resultSQL[i].spareParts);
                             nomenclatureList.push(nomenclature);
                         }
                         return resolve(nomenclatureList); 

@@ -47,7 +47,7 @@ exports.deleteFournisseur = async function(req, res){
     }
     const sqlDelete = "DELETE FROM fournisseur WHERE idFournisseur = ?";
     const delete_query = connection.format(sqlDelete, [idFournisseur]);
-    const sqlInsert = "INSERT INTO fournisseur_delete VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    const sqlInsert = "INSERT INTO fournisseur_delete VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     const insert_query = connection.format(sqlInsert, dataDelete);
     for (var i=0; i<fournisseurList0.length; i++){
         if (idFournisseur==fournisseurList0[i].idFournisseur){
@@ -102,7 +102,7 @@ exports.ajoutFournisseur = function(req, res){
     let newFournisseur = new Fournisseur(idFournisseur, listeFournisseur, nomPrenom, societe, adresse1, adresse2, cPostal, ville, pays, telephone, portable, site, email, nTVA, tauxTVA, langue, remarques, tauxEchange); //tauxECHange a rajout
     fournisseurList0.push(newFournisseur);
     //Rajouter check idFournisseur unique
-    const sqlInsert = "INSERT INTO fournisseur(idFournisseur,listeFournisseur,nomPrenom, societe, adresse1, adresse2, cPostal, ville, pays, telephone, portable, site, email, nTVA, tauxTVA, langue, remarques, tauxEchange) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    const sqlInsert = "INSERT INTO fournisseur(idFournisseur,listeFournisseur,nomPrenom, societe, adresse1, adresse2, cPostal, ville, pays, telephone, portable, site, email, nTVA, tauxTVA, langue, remarques, tauxEchange) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE idFournisseur=idFournisseur";
     let todo = [idFournisseur, listeFournisseur, nomPrenom, societe, adresse1, adresse2, cPostal, ville, pays, telephone, portable, site, email, nTVA, tauxTVA, langue, remarques, tauxEchange];
     connection.query(sqlInsert, todo, function(err, result){
         if (err) throw err;
@@ -133,14 +133,25 @@ exports.fournisseurModification = function(request, response){
 }
 
 exports.selectAll = function(request, response){
+    //Selectionner id visible à mon utilisateur 
+    idFournisseurs = request.body.idFournisseurs;
+    console.log("Select all effectué");
+}
+
+exports.resetAll = function(request, response){
     //Selectionner id visible à mon utilisateur
     idFournisseurs.length = 0; 
-    idFournisseurs = request.body.idFournisseurs;
+    console.log("Panier reset");
 }
 
 exports.modifAllForm = function(request, response){
     //affiche form pour tout modifier
-    response.render('modifAllFournisseur.ejs');
+    if (idFournisseurs.length>0){
+        response.render('modifAllFournisseur.ejs');
+    } else {
+        console.log("Rien de selectionné");
+        response.redirect('/fournisseurs');
+    }
 }
 
 exports.modifAllFournisseur = function(request, response){

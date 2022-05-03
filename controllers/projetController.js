@@ -51,7 +51,7 @@ exports.ajoutProjet = function(req, res){
     let newProjet = new Projet(idProjet, nom, description);
     projetList.push(newProjet);
         //Rajouter check idprojet unique
-    const sqlInsert = "INSERT INTO projet(idProjet,nom,description) VALUES (?,?,?)";
+    const sqlInsert = "INSERT INTO projet(idProjet,nom,description) VALUES (?,?,?) ON DUPLICATE KEY UPDATE idProjet=idProjet";
     let todo = [idProjet, nom, description];
     connection.query(sqlInsert, todo, function(err, result){
         if (err) throw err;
@@ -136,7 +136,6 @@ exports.modifAllForm = function(request, response){
 exports.modifAllProjet = function(request, response){
     let nom = request.body.nom;
     let description = request.body.description;
-
     for (var i=0; i<projetList.length; i++){
         //changement local de la liste des projets
         for (var j=0; j<idProjets.length; j++){

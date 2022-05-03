@@ -14,17 +14,14 @@ exports.projetPage = async function (request, response) {
     let mesFournisseur = await fournisseurController0.getFournisseur();
     let mesBonCommande = await bonCommandeController0.getBonCommande();
     let mesNomenclature = await nomenclatureController0.getNomenclature();
-    //let mesUser = userController0.getUser();
     let monProjet;
-    let mesFournisseurNMCLT = [];
     let mesBonCommandeProjet = [];
-    //let mesUserProjet = [];
     let fournisseurList = [];
 
     const myFournisseurSet = new Set()
+    let dictTable = {};
 
     for (var i=0; i<mesProjet.length; i++){
-        //Projet
         if (mesProjet[i].idProjet==idProjet){
             monProjet=mesProjet[i];
             break;
@@ -47,8 +44,6 @@ exports.projetPage = async function (request, response) {
             }
         }
     }
-
-    let dictTable = {};
     for (var i=0; i<mesNomenclature.length; i++){
         //Fournisseur-Articles
         for (var j=0; j<fournisseurList.length;j++){

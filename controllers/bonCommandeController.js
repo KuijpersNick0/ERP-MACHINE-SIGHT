@@ -1,7 +1,6 @@
 const { response } = require('express');
 let BonCommande = require('../models/bonCommandeModel');
 let connection = require('../db');
-const { goToBonCommande } = require('./projetController');
 const { stat } = require('fs');
 const res = require('express/lib/response');
 let projetController0 = require('../controllers/projetController');
@@ -20,7 +19,7 @@ exports.bonCommandeList = function(request, response){
         } 
         for (var i=0; i<resultSQL.length; i++){
             let bonCommande = new BonCommande(resultSQL[i].idBonCommande,resultSQL[i].refFournisseur,resultSQL[i].description,resultSQL[i].prixTotal,resultSQL[i].remise, resultSQL[i].idProjet, resultSQL[i].idFournisseur,resultSQL[i].dateCommande,resultSQL[i].dateEcheance,resultSQL[i].statut,resultSQL[i].par,resultSQL[i].approbation,resultSQL[i].numOffreFournisseur,resultSQL[i].prctageRemiseGlobCommande,resultSQL[i].acompte,
-                resultSQL[i].remarques, resultSQL[i].descriptionProjet,resultSQL[i].client,resultSQL[i].nomPrenomFournisseur, resultSQL[i].fkProjet0, resultSQL[i].fkFournisseur0, resultSQL[i].fkClient0, resultSQL[i].fkUser0);
+                resultSQL[i].remarques, resultSQL[i].descriptionProjet,resultSQL[i].client,resultSQL[i].aliasFournisseur, resultSQL[i].fkProjet0, resultSQL[i].fkFournisseur0, resultSQL[i].fkClient0, resultSQL[i].fkUser0);
             bonCommandeList.push(bonCommande);
         }
         response.render('bonCommande.ejs', {bonCommande :resultSQL}); 
@@ -114,7 +113,7 @@ exports.bonCommandeModification = async function(request, response){
         //modification sur une view de plusieurs tableaux impossible, je dois segmenter les modifications
     let bonCommandeArray = ["refFournisseur", "description", "prixTotal", "remise", "dateCommande", "dateEcheance", "statut", "approbation", "numOffreFournisseur", "prctageRemiseGlobCommande", "acompte", "remarques"];
     let projetArray = ["idProjet", "descriptionProjet"];
-    let fournisseurArray = ["idFournisseur", "nomPrenomFournisseur"];
+    let fournisseurArray = ["idFournisseur", "aliasFournisseur"];
     let clientArray = ["client"];
     let userArray = ["par"];
     let monBonCommande;
@@ -126,7 +125,15 @@ exports.bonCommandeModification = async function(request, response){
         }
     }
     if (newData.length < 45 && bonCommandeArray.includes(myColumn)) {
-        console.log("update boncommande");
+        if (myColumn=="statut" && newData=="recept"){
+            //Si mon bon de commande est mis en recept j'update tout les articles lié à recept
+            connection.query("UPDATE nomenclature SET statut=? WHERE fkBonCommande=?;",[newData,myID], function(error, resultSQL){
+                if (error) throw error
+                else {
+                    console.log('MAJ statut recept NMCLT-BDC');
+                }
+            })
+        } 
         connection.query('UPDATE boncommande SET ?? = ? WHERE idBonCommande = ?;',[myColumn,newData,myID], function(error, resultSQL){
             if (error) throw error;
             else{
@@ -176,8 +183,9 @@ exports.bonCommandeModification = async function(request, response){
     } 
     else if (newData.length < 45 && fournisseurArray.includes(myColumn) && monBonCommande.fkFournisseur0!=null ){
         switch(myColumn){
-            case "nomPrenomFournisseur":
-                myColumn = "nomPrenom";
+            //Pas modifiable pour le moment dangereux modif alias
+            case "aliasFournisseur":
+                myColumn = "alias";
                 connection.query('UPDATE fournisseur SET ?? = ? WHERE pkFournisseur = ?;', [myColumn,newData,monBonCommande.fkFournisseur0], function(error, resultSQL) {
                     if (error) throw error;
                     else{
@@ -215,9 +223,6 @@ exports.bonCommandeModification = async function(request, response){
         } 
     } 
     else if (newData.length < 45 && clientArray.includes(myColumn)){
-
-        //PROBLEME ESPACES
-
         const sqlSelect = "SELECT pkClient FROM client WHERE nomPrenom=?";
         const select_query = connection.format(sqlSelect, [newData]);
         const sqlUpdate = "UPDATE boncommande SET fkClient0=? WHERE idBonCommande=?";
@@ -322,10 +327,48 @@ exports.getBonCommande = function (req, res) {
             } 
             for (var i=0; i<resultSQL.length; i++){
                 let bonCommande = new BonCommande(resultSQL[i].idBonCommande,resultSQL[i].refFournisseur,resultSQL[i].description,resultSQL[i].prixTotal,resultSQL[i].remise, resultSQL[i].idProjet, resultSQL[i].idFournisseur,resultSQL[i].dateCommande,resultSQL[i].dateEcheance,resultSQL[i].statut,resultSQL[i].par,resultSQL[i].approbation,resultSQL[i].numOffreFournisseur,resultSQL[i].prctageRemiseGlobCommande,resultSQL[i].acompte,
-                    resultSQL[i].remarques, resultSQL[i].descriptionProjet,resultSQL[i].client,resultSQL[i].nomPrenomFournisseur, resultSQL[i].fkProjet0, resultSQL[i].fkFournisseur0, resultSQL[i].fkClient0, resultSQL[i].fkUser0);
+                    resultSQL[i].remarques, resultSQL[i].descriptionProjet,resultSQL[i].client,resultSQL[i].aliasFournisseur, resultSQL[i].fkProjet0, resultSQL[i].fkFournisseur0, resultSQL[i].fkClient0, resultSQL[i].fkUser0);
                 bonCommandeList.push(bonCommande);
             }
             return resolve(bonCommandeList);
         })
     })
+}
+
+exports.deleteBonCommande = async function(req, res) {
+    let idBonCommande = req.params.index;
+    let dataDelete = []
+    for (var i=0; i<bonCommandeList.length; i++){
+        if (idBonCommande==bonCommandeList[i].idBonCommande){
+            dataDelete.push(bonCommandeList[i].idBonCommande, bonCommandeList[i].refFournisseur, bonCommandeList[i].description, bonCommandeList[i].prixTotal, bonCommandeList[i].remise, bonCommandeList[i].fkProjet0, bonCommandeList[i].fkFournisseur0, bonCommandeList[i].fkClient0, bonCommandeList[i].fkUser0, bonCommandeList[i].dateCommande, bonCommandeList[i].dateEcheance, bonCommandeList[i].statut, bonCommandeList[i].approbation, bonCommandeList[i].numOffreFournisseur, bonCommandeList[i].prctageRemiseGlobCommande, bonCommandeList[i].acompte, bonCommandeList[i].remarques);
+            break;
+        }
+    }
+    const sqlDelete = "DELETE FROM boncommande WHERE idBonCommande = ?";
+    const delete_query = connection.format(sqlDelete, [idBonCommande]);
+    const sqlInsert = "INSERT INTO boncommande_delete (idBonCommande, refFournisseur, description, prixTotal, remise, fkProjet0, fkFournisseur0, fkClient0, fkUser0, dateCommande, dateEcheance, statut, approbation, numOffreFournisseur, prctageRemiseGlobCommande, acompte, remarques) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    const insert_query = connection.format(sqlInsert, dataDelete);
+    for (var i=0; i<bonCommandeList.length; i++){
+        if (idBonCommande==bonCommandeList[i].idBonCommande){
+            bonCommandeList.splice(i,1);
+            console.log("effacé localement");
+            break;
+        }
+    }
+    await connection.query (delete_query, async (error, resultSQL) => {
+        if (error){
+            console.log(error);
+        }else{
+            console.log("Effacé bdd");
+            await connection.query(insert_query, (error, resultSQL) =>{
+                if (error) {
+                    console.log(error);
+                }
+                else{
+                    console.log("Ajouté a table 'boncommande_delete'");
+                }
+            })
+        }
+    });
+    res.redirect('/bonCommande');
 }
