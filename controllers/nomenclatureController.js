@@ -6,6 +6,7 @@ const res = require('express/lib/response');
 let fournisseurController0 = require('../controllers/fournisseurController');
 let userController0 = require('../controllers/userController');
 let projetController0 = require('../controllers/projetController');
+const { parseString } = require('fast-csv');
 
 let nomenclatureList = [];
 let nomenclatureListPDF = [];
@@ -23,9 +24,9 @@ exports.nomenclatureList = async function(request, response){
     //affiche la liste des projet
     nomenclatureList.length = 0;
     const sqlProcedure = "call maj_fk_nomenclature()";
-    const procedure_query = connection.format(sqlProcedure);
+    const procedure_query = connection.query(sqlProcedure);
     const sqlSelect = "SELECT * FROM nomenclature_view";
-    const select_query = connection.format(sqlSelect);
+    const select_query = connection.query(sqlSelect);
     
     await connection.query(procedure_query, async (error0, resultSQL0) => {
         if (error0){
@@ -201,7 +202,7 @@ exports.nomenclatureModification = async function(request, response){
         }
     }
     if (newData.length<45 && nomenclatureArray.includes(myColumn)) {
-        connection.query('UPDATE nomenclature SET ?? = ? WHERE idNomenclature = ?;',[myColumn,newData,myID], function(error, resultSQL){
+        connection.query('UPDATE nomenclature SET ' + connection.escapeId(myColumn) + '=? WHERE idNomenclature=?;',[newData,myID], function(error, resultSQL){
             if (error) throw error;
             else{
                 console.log("modif enregistrer en bdd");
@@ -210,9 +211,9 @@ exports.nomenclatureModification = async function(request, response){
         if (myColumn=="statut" && newData=="recept" && monArticle.fkBonCommande!=null){
             //Si tout mes statuts lié au bon de commande sont en recept j'update le bon de commande en recept
             const sqlSelect = 'SELECT (SELECT COUNT(fkBonCommande) FROM nomenclature WHERE fkBonCommande=? AND statut=?) AS sum0, (SELECT COUNT(statut) FROM nomenclature WHERE fkBonCommande=?) AS sum1 FROM nomenclature';
-            const select_query = connection.format(sqlSelect, [monArticle.fkBonCommande, newData, monArticle.fkBonCommande]);
+            const select_query = connection.query(sqlSelect, [monArticle.fkBonCommande, newData, monArticle.fkBonCommande]);
             const sqlUpdate = 'UPDATE boncommande SET statut=? WHERE idBonCommande=?';
-            const update_query = connection.format(sqlUpdate, [newData, monArticle.fkBonCommande]);
+            const update_query = connection.query(sqlUpdate, [newData, monArticle.fkBonCommande]);
             await connection.query(select_query, async (error, resultSQL) => {
                 if (error) throw error
                 else if (resultSQL[0].sum0 == resultSQL[0].sum1){
@@ -230,7 +231,7 @@ exports.nomenclatureModification = async function(request, response){
         switch (myColumn) {
             case "nomProjet":
                 myColumn="nom";
-                connection.query('UPDATE projet SET ?? = ? WHERE pkProjet = ?;', [myColumn,newData,monArticle.fkProjet], function(error, resultSQL) {
+                connection.query('UPDATE projet SET ' + connection.escapeId(myColumn) + ' = ? WHERE pkProjet = ?;', [newData,monArticle.fkProjet], function(error, resultSQL) {
                     if (error) throw error;
                     else{
                         console.log("modif enregistrer en bdd");
@@ -245,7 +246,7 @@ exports.nomenclatureModification = async function(request, response){
         switch(myColumn){
             case "fournisseur":
                 myColumn = "listeFournisseur";
-                connection.query('UPDATE fournisseur SET ?? = ? WHERE pkFournisseur = ?;', [myColumn,newData,monArticle.fkFournisseur], function(error, resultSQL) {
+                connection.query('UPDATE fournisseur SET ' + connection.escapeId(myColumn) + ' = ? WHERE pkFournisseur = ?;', [newData,monArticle.fkFournisseur], function(error, resultSQL) {
                     if (error) throw error;
                     else{
                         console.log("modif enregistrer en bdd");
@@ -260,7 +261,7 @@ exports.nomenclatureModification = async function(request, response){
         switch(myColumn){
             case "client":
                 myColumn = "nomPrenom";
-                connection.query('UPDATE client SET ?? = ? WHERE pkClient = ?;', [myColumn,newData,monArticle.fkClient], function(error, resultSQL) {
+                connection.query('UPDATE client SET ' + connection.escapeId(myColumn) + ' = ? WHERE pkClient = ?;', [newData,monArticle.fkClient], function(error, resultSQL) {
                     if (error) throw error;
                     else{
                         console.log("modif enregistrer en bdd");
@@ -275,7 +276,7 @@ exports.nomenclatureModification = async function(request, response){
         switch(myColumn){
             case "par":
                 myColumn = "pseudo";
-                connection.query('UPDATE user SET ?? = ? WHERE pkUser = ?;', [myColumn,newData,monArticle.fkUser], function(error, resultSQL) {
+                connection.query('UPDATE user SET ' + connection.escapeId(myColumn) + ' = ? WHERE pkUser = ?;', [newData,monArticle.fkUser], function(error, resultSQL) {
                     if (error) throw error;
                     else{
                         console.log("modif enregistrer en bdd");
@@ -290,7 +291,7 @@ exports.nomenclatureModification = async function(request, response){
         switch(myColumn){
             case "idBonCommande":
                 const sqlSelect = "SELECT idBonCommande FROM boncommande WHERE idBonCommande=?";
-                const select_query = connection.format(sqlSelect, [newData]);
+                const select_query = connection.query(sqlSelect, [newData]);
                 const sqlUpdate = "UPDATE nomenclature SET fkBonCommande=? WHERE idNomenclature=?";
                 await connection.query(select_query, async(error, resultSQL) => {
                     if (error) throw (error)
@@ -299,7 +300,7 @@ exports.nomenclatureModification = async function(request, response){
                             for (var j=0; j<resultSQL.length; j++){
                                 todo = resultSQL[j].idBonCommande;
                             }
-                            const update_query = connection.format(sqlUpdate, [todo, myID]);
+                            const update_query = connection.query(sqlUpdate, [todo, myID]);
                             await connection.query(update_query, (error, resultSQL) => {
                                 if (error) throw error;
                                 else {
@@ -352,7 +353,7 @@ exports.modifAllNomenclature = function(request, response){
     } 
     if (rev.length<45 && matiere.length<45 && remise.length<45 && effectue.length<45){
         //update bdd + verif suppl longueur
-        const sqlUpdate = "UPDATE nomenclature SET rev=?, matiere=?, remise=?, effectue=? WHERE idNomenclature IN ?";
+        const sqlUpdate = "UPDATE nomenclature SET rev=?, matiere=?, remise=?, effectue=? WHERE idNomenclature IN (?)";
         let todo = [rev, matiere, remise, effectue, [idNomenclatures]];
         connection.query(sqlUpdate, todo, function(err, result){
             if (err) throw err;
@@ -371,8 +372,8 @@ exports.majPrixTotal = async function(request, response){
     for (var i=0; i<nomenclatureList.length; i++){
         idNomenclatureList.push(nomenclatureList[i].idNomenclature);
     }
-    const sqlSelect = "SELECT pkNomenclature FROM nomenclature WHERE idNomenclature IN ?";
-    const select_query = connection.format(sqlSelect, [[idNomenclatureList]]);
+    const sqlSelect = "SELECT pkNomenclature FROM nomenclature WHERE idNomenclature IN (?)";
+    const select_query = connection.query(sqlSelect, [[idNomenclatureList]]);
     if (idNomenclatureList.length!=null) {
         await connection.query (select_query, async (error, resultSQL) => {
             if (error){
@@ -382,8 +383,8 @@ exports.majPrixTotal = async function(request, response){
                     pkNomenclatureList.push(resultSQL[j].pkNomenclature);
                 }
                 if (resultSQL.length==pkNomenclatureList.length){
-                    const sqlUpdate = "UPDATE nomenclature, fournisseur SET nomenclature.prixTotalClient= nomenclature.qte*nomenclature.prixUnitClient*(1-(nomenclature.remise)/100)*(1+ fournisseur.tauxTVA) WHERE nomenclature.fkFournisseur=fournisseur.pkFournisseur AND pkNomenclature IN ?";
-                    const update_query= connection.format(sqlUpdate, [[pkNomenclatureList]]);
+                    const sqlUpdate = "UPDATE nomenclature, fournisseur SET nomenclature.prixTotalClient= nomenclature.qte*nomenclature.prixUnitClient*(1-(nomenclature.remise)/100)*(1+ fournisseur.tauxTVA) WHERE nomenclature.fkFournisseur=fournisseur.pkFournisseur AND pkNomenclature IN (?)";
+                    const update_query= connection.query(sqlUpdate, [[pkNomenclatureList]]);
                     await connection.query(update_query, (error, resultSQL) =>{
                         if (error) {
                             console.log(error);
@@ -430,9 +431,9 @@ exports.ajoutNomenclature = function(req, res){
 exports.getNomenclature = async function(req,res){
     nomenclatureList.length = 0;
     const sqlProcedure = "call maj_fk_nomenclature()";
-    const procedure_query = connection.format(sqlProcedure);
+    const procedure_query = connection.query(sqlProcedure);
     const sqlSelect = "SELECT * FROM nomenclature_view";
-    const select_query = connection.format(sqlSelect);
+    const select_query = connection.query(sqlSelect);
     return new Promise((resolve, reject) => {
         connection.query(procedure_query, async (error0, resultSQL0) => {
             if (error0){

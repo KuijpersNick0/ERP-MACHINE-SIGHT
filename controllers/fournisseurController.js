@@ -46,9 +46,9 @@ exports.deleteFournisseur = async function(req, res){
         }
     }
     const sqlDelete = "DELETE FROM fournisseur WHERE idFournisseur = ?";
-    const delete_query = connection.format(sqlDelete, [idFournisseur]);
+    const delete_query = connection.query(sqlDelete, [idFournisseur]);
     const sqlInsert = "INSERT INTO fournisseur_delete VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-    const insert_query = connection.format(sqlInsert, dataDelete);
+    const insert_query = connection.query(sqlInsert, dataDelete);
     for (var i=0; i<fournisseurList0.length; i++){
         if (idFournisseur==fournisseurList0[i].idFournisseur){
             fournisseurList0.splice(i,1);
@@ -120,7 +120,7 @@ exports.fournisseurModification = function(request, response){
     myID = myID.replace(/(\r\n|\n|\r|\s)/gm,"");
     let myColumn = request.body.myColumn;
     if (newData.length < 45) {
-        connection.query('UPDATE fournisseur SET ?? = ? WHERE idFournisseur = ?;',[myColumn,newData,myID], function(error, resultSQL){
+        connection.query('UPDATE fournisseur SET ' + connection.escapeId(myColumn) + '=? WHERE idFournisseur=?;',[newData,myID], function(error, resultSQL){
             if (error) throw error;
             else{
                 console.log("modif enregistrer en bdd");
@@ -170,7 +170,7 @@ exports.modifAllFournisseur = function(request, response){
     } 
     if (langue.length<45 && tauxEchange.length<45 && tauxEchange.length<45){
         //update bdd + verif suppl longueur
-        const sqlUpdate = "UPDATE fournisseur SET langue=?, remarques=?, tauxEchange=? WHERE idFournisseur IN ?";
+        const sqlUpdate = "UPDATE fournisseur SET langue=?, remarques=?, tauxEchange=? WHERE idFournisseur IN (?)";
         let todo = [langue, remarques, tauxEchange, [idFournisseurs]];
         connection.query(sqlUpdate, todo, function(err, result){
             if (err) throw err;

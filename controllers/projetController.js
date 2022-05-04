@@ -72,9 +72,9 @@ exports.deleteProjet = async function(req, res){
         }
     }
     const sqlDelete = "DELETE FROM projet WHERE idProjet = ?";
-    const delete_query = connection.format(sqlDelete, [idProjet]);
+    const delete_query = connection.query(sqlDelete, [idProjet]);
     const sqlInsert = "INSERT INTO projet_delete (pkProjet, idProjet, nom, description, prixTotalNomenclature, prixTotalBonCommande, natureProjet) VALUES (?,?,?,?,?,?,?)"
-    const insert_query = connection.format(sqlInsert, dataDelete);
+    const insert_query = connection.query(sqlInsert, dataDelete);
     for (var i=0; i<projetList.length; i++){
         if (idProjet==projetList[i].idProjet){
             projetList.splice(i,1);
@@ -108,7 +108,7 @@ exports.projetModification = function(request, response){
     myID = myID.replace(/(\r\n|\n|\r|\s)/gm,"");
     let myColumn = request.body.myColumn;
     if (newData.length < 45){
-        connection.query('UPDATE projet SET ?? = ? WHERE idProjet = ?;',[myColumn,newData,myID], function(error, resultSQL){
+        connection.query('UPDATE projet SET ' + connection.escapeId(myColumn) + '=? WHERE idProjet=?;',[newData,myID], function(error, resultSQL){
             if (error) throw error;
             else if (resultSQL.length==0){
                 console.log("Erreur aucun element update")
@@ -147,7 +147,7 @@ exports.modifAllProjet = function(request, response){
     } 
     if (nom.length<45 && description.length<45){
         //update bdd + verif suppl longueur
-        const sqlUpdate = "UPDATE projet SET nom=?, description=? WHERE idProjet IN ?";
+        const sqlUpdate = "UPDATE projet SET nom=?, description=? WHERE idProjet IN (?)";
         let todo = [nom, description, [idProjets]];
         connection.query(sqlUpdate, todo, function(err, result){
             if (err) throw err;
@@ -162,9 +162,9 @@ exports.modifAllProjet = function(request, response){
 exports.majPrixTotal = async function(request, response){
     //mise a jour colonne prix total
     const sqlUpdateNomenclature = "UPDATE projet JOIN nomenclature ON projet.pkProjet = nomenclature.fkProjet  SET projet.prixTotalNomenclature = (SELECT SUM(prixTotalClient) FROM nomenclature WHERE nomenclature.fkProjet=projet.pkProjet) WHERE pkProjet = fkProjet;";
-    const updateNomenclature_query = connection.format(sqlUpdateNomenclature);
+    const updateNomenclature_query = connection.query(sqlUpdateNomenclature);
     const sqlUpdateBonCommande = "UPDATE projet JOIN boncommande ON projet.pkProjet = boncommande.fkProjet0  SET projet.prixTotalBonCommande = (SELECT SUM(prixTotal) FROM boncommande WHERE boncommande.fkProjet0=projet.pkProjet) WHERE pkProjet = fkProjet0;";
-    const updateBonCommande_query = connection.format(sqlUpdateBonCommande);
+    const updateBonCommande_query = connection.query(sqlUpdateBonCommande);
     
     await connection.query(updateNomenclature_query, async (error, resultSQL) => {
         if (error){
@@ -180,4 +180,8 @@ exports.majPrixTotal = async function(request, response){
         }
     })
     response.redirect('/projet');
+}
+
+exports.processStop = function(request, response){
+    process.exit(0);
 }

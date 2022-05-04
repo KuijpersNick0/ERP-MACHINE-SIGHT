@@ -61,12 +61,12 @@ exports.enregistrementBonCommande = async function(req, res){
         }
     }
     const sqlSelect = "SELECT idBonCommande FROM boncommande WHERE idBonCommande=?";
-    const select_query = connection.format(sqlSelect, [idBonCommande]);
+    const select_query = connection.query(sqlSelect, [idBonCommande]);
     const sqlInsert = "INSERT INTO boncommande(idBonCommande, description, prixTotal, fkProjet0, fkFournisseur0, dateCommande, fkUser0, numOffreFournisseur) VALUES (?,?,?,?,?,?,?,?);";
     let todo = [idBonCommande, monProjet.description, prixTotal, monProjet.pkProjet, monFournisseur.pkFournisseur, dateCommande, monUser.pkUser, numOffreFournisseur];
-    const insert_query = connection.format(sqlInsert, todo);
-    const sqlInsertNomenclature = "UPDATE nomenclature SET fkBonCommande=? WHERE pkNomenclature IN ? ";
-    const insertNomenclature_query = connection.format(sqlInsertNomenclature, [idBonCommande,[mesArticles]]);
+    const insert_query = connection.query(sqlInsert, todo);
+    const sqlInsertNomenclature = "UPDATE nomenclature SET fkBonCommande=? WHERE pkNomenclature IN (?) ";
+    const insertNomenclature_query = connection.query(sqlInsertNomenclature, [idBonCommande,[mesArticles]]);
 
     let formatGood = false;
     for (elem of todo) {
@@ -134,7 +134,7 @@ exports.bonCommandeModification = async function(request, response){
                 }
             })
         } 
-        connection.query('UPDATE boncommande SET ?? = ? WHERE idBonCommande = ?;',[myColumn,newData,myID], function(error, resultSQL){
+        connection.query('UPDATE boncommande SET ' + connection.escapeId(myColumn) + ' = ? WHERE idBonCommande = ?;',[newData,myID], function(error, resultSQL){
             if (error) throw error;
             else{
                 console.log("modif enregistrer en bdd");
@@ -145,7 +145,7 @@ exports.bonCommandeModification = async function(request, response){
         switch (myColumn) {
             case "descriptionProjet":
                 myColumn="description";
-                connection.query('UPDATE projet SET ?? = ? WHERE pkProjet = ?;', [myColumn,newData,monBonCommande.fkProjet0], function(error, resultSQL) {
+                connection.query('UPDATE projet SET ' + connection.escapeId(myColumn) + ' = ? WHERE pkProjet = ?;', [newData,monBonCommande.fkProjet0], function(error, resultSQL) {
                     if (error) throw error;
                     else{
                         console.log("modif enregistrer en bdd");
@@ -155,7 +155,7 @@ exports.bonCommandeModification = async function(request, response){
             case "idProjet":
                 //je dois modifier idProjet et ma fkProjet correspondant au nouveau projet
                 const sqlSelect = "SELECT pkProjet FROM projet WHERE idProjet=?";
-                const select_query = connection.format(sqlSelect, [newData]);
+                const select_query = connection.query(sqlSelect, [newData]);
                 const sqlUpdate = "UPDATE boncommande SET fkProjet0=? WHERE idBonCommande=?";
                 await connection.query(select_query, async(error, resultSQL) => {
                     if (error) throw (error)
@@ -164,7 +164,7 @@ exports.bonCommandeModification = async function(request, response){
                             for (var j=0; j<resultSQL.length; j++){
                                 todo = resultSQL[j].pkProjet;
                             }
-                            const update_query = connection.format(sqlUpdate, [todo, myID]);
+                            const update_query = connection.query(sqlUpdate, [todo, myID]);
                             await connection.query(update_query, (error, resultSQL) => {
                                 if (error) throw error;
                                 else {
@@ -186,7 +186,7 @@ exports.bonCommandeModification = async function(request, response){
             //Pas modifiable pour le moment dangereux modif alias
             case "aliasFournisseur":
                 myColumn = "alias";
-                connection.query('UPDATE fournisseur SET ?? = ? WHERE pkFournisseur = ?;', [myColumn,newData,monBonCommande.fkFournisseur0], function(error, resultSQL) {
+                connection.query('UPDATE fournisseur SET ' + connection.escapeId(myColumn) + ' = ? WHERE pkFournisseur = ?;', [newData,monBonCommande.fkFournisseur0], function(error, resultSQL) {
                     if (error) throw error;
                     else{
                         console.log("modif enregistrer en bdd");
@@ -196,7 +196,7 @@ exports.bonCommandeModification = async function(request, response){
             case "idFournisseur":
                 //idem idProjet
                 const sqlSelect = "SELECT pkFournisseur FROM fournisseur WHERE idFournisseur=?";
-                const select_query = connection.format(sqlSelect, [newData]);
+                const select_query = connection.query(sqlSelect, [newData]);
                 const sqlUpdate = "UPDATE boncommande SET fkFournisseur0=? WHERE idBonCommande=?";
                 await connection.query(select_query, async(error, resultSQL) => {
                     if (error) throw (error)
@@ -205,7 +205,7 @@ exports.bonCommandeModification = async function(request, response){
                             for (var j=0; j<resultSQL.length; j++){
                                 todo = resultSQL[j].pkFournisseur;
                             }
-                            const update_query = connection.format(sqlUpdate, [todo, myID]);
+                            const update_query = connection.query(sqlUpdate, [todo, myID]);
                             await connection.query(update_query, (error, resultSQL) => {
                                 if (error) throw error;
                                 else {
@@ -224,7 +224,7 @@ exports.bonCommandeModification = async function(request, response){
     } 
     else if (newData.length < 45 && clientArray.includes(myColumn)){
         const sqlSelect = "SELECT pkClient FROM client WHERE nomPrenom=?";
-        const select_query = connection.format(sqlSelect, [newData]);
+        const select_query = connection.query(sqlSelect, [newData]);
         const sqlUpdate = "UPDATE boncommande SET fkClient0=? WHERE idBonCommande=?";
         await connection.query(select_query, async(error, resultSQL) => {
             if (error) throw (error)
@@ -233,7 +233,7 @@ exports.bonCommandeModification = async function(request, response){
                     for (var j=0; j<resultSQL.length; j++){
                         todo = resultSQL[j].pkClient;
                     }
-                    const update_query = connection.format(sqlUpdate, [todo, myID]);
+                    const update_query = connection.query(sqlUpdate, [todo, myID]);
                     await connection.query(update_query, (error, resultSQL) => {
                         if (error) throw error;
                         else {
@@ -248,7 +248,7 @@ exports.bonCommandeModification = async function(request, response){
     }
     else if (newData.length < 45 && userArray.includes(myColumn)){
         const sqlSelect = "SELECT pkUser FROM user WHERE pseudo=?";
-        const select_query = connection.format(sqlSelect, [newData]);
+        const select_query = connection.query(sqlSelect, [newData]);
         const sqlUpdate = "UPDATE boncommande SET fkUser0=? WHERE idBonCommande=?";
         await connection.query(select_query, async(error, resultSQL) => {
             if (error) throw (error)
@@ -257,7 +257,7 @@ exports.bonCommandeModification = async function(request, response){
                     for (var j=0; j<resultSQL.length; j++){
                         todo = resultSQL[j].pkUser;
                     }
-                    const update_query = connection.format(sqlUpdate, [todo, myID]);
+                    const update_query = connection.query(sqlUpdate, [todo, myID]);
                     await connection.query(update_query, (error, resultSQL) => {
                         if (error) throw error;
                         else {
@@ -305,7 +305,7 @@ exports.modifAllBonCommande = function(request, response){
     } 
     if (prixTotal.length<45 && description.length<45 && remise.length<45 && statut.length<45){
         //update bdd + verif suppl longueur
-        const sqlUpdate = "UPDATE boncommande SET description=?, prixTotal=?, remise=?, statut=?  WHERE idBonCommande IN ?";
+        const sqlUpdate = "UPDATE boncommande SET description=?, prixTotal=?, remise=?, statut=?  WHERE idBonCommande IN (?)";
         let todo = [description, prixTotal, remise, statut, [idBonCommandes]];
         connection.query(sqlUpdate, todo, function(err, result){
             if (err) throw err;
@@ -345,9 +345,9 @@ exports.deleteBonCommande = async function(req, res) {
         }
     }
     const sqlDelete = "DELETE FROM boncommande WHERE idBonCommande = ?";
-    const delete_query = connection.format(sqlDelete, [idBonCommande]);
+    const delete_query = connection.query(sqlDelete, [idBonCommande]);
     const sqlInsert = "INSERT INTO boncommande_delete (idBonCommande, refFournisseur, description, prixTotal, remise, fkProjet0, fkFournisseur0, fkClient0, fkUser0, dateCommande, dateEcheance, statut, approbation, numOffreFournisseur, prctageRemiseGlobCommande, acompte, remarques) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-    const insert_query = connection.format(sqlInsert, dataDelete);
+    const insert_query = connection.query(sqlInsert, dataDelete);
     for (var i=0; i<bonCommandeList.length; i++){
         if (idBonCommande==bonCommandeList[i].idBonCommande){
             bonCommandeList.splice(i,1);
