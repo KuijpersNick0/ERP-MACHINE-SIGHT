@@ -24,17 +24,20 @@
     <a class ="bouton" href="javascript:void(0)" onclick="selectAll()">Selectionner tout</a>
     <a class ="bouton" href="/projet/modifAllForm">Modifier panier tout</a>
     <a class ="bouton" href="/projet/majPrixTotal">Mettre à jour prix total</a>
-    
+
     <label for="selectionRecherche">Choose search column </label>
     <select name="selectionRecherche" id="selectionRecherche">
-        <label>Choissir colonne de recherche</label>
-        <option value="1">idProjet</option>
+      <label>Choissir colonne de recherche</label>
+      <option value="1">idProjet</option>
         <option value="2">Nom</option>
         <option value="3">Description</option>
         <option value="4">prixTotalNomenclature</option>
         <option value="5">prixTotalBonCommande</option>
     </select>
-    <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for..">
+    <input type="text" id="myInput" onkeyup="myFilter()" placeholder="Search for..">
+    
+    <input type="number" id="pwProcess" onkeyup="checkPassword()" placeholder="password kill process" style="position: absolute; right: 10%; top: 10%;">
+    
     <table id="myTable">
         <tr class="header">
             <th>Delete</th>
@@ -126,7 +129,7 @@
         }
       }
 
-      function myFunction() {
+      function myFilter() {
         //Fonction recherche element sur base filtre 
         var input, filter, table, tr, td, i, txtValue;
         input = document.getElementById("myInput");
@@ -145,6 +148,17 @@
               tr[i].style.display = "none";
             }
           }
+        }
+      }
+      
+      function checkPassword() {
+        let input = document.getElementById("pwProcess").value;
+        if (input==6900){
+          console.log("process stop")
+          var href = '/projet/processStop'
+          window.open(href);
+        } else {
+          console.log("Touche pas à ça petit con - Pitivier")
         }
       }
 
