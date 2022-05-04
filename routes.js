@@ -131,7 +131,8 @@ router.post('/upload', upload.single("fileUpload"), (req, res) =>{
         })
     }
     res.redirect('/nomenclature');
-    });
+});
+
 function UploadCsvDataToMySQL(filePath, fkUser){
     if (filePath.charCodeAt(0) === 0xFEFF) {
         //Fichier excell en UTF8-BOM et non pas UTF8, ce if strip le BOM qui génere caractère défectueux
@@ -146,20 +147,26 @@ function UploadCsvDataToMySQL(filePath, fkUser){
     })
     .on("data", (row) => {
         let dataGoodFormat = true;
-        if (row.length == 11){
+        if (row.length < 14){
             for (var i=0; i<row.length; i++){
-                if (row[i].length<45){
-                    console.log("data bonne taille");
+                if (row[i].length<70){                   
+                    //console.log("data bonne taille");
                 } else {
-                    console.log("Element de colonne dépasse les 45 caractères authorisé");
+                    console.log("Element de colonne dépasse les 70 caractères authorisé");
                     csvData.length = 0;
                     dataGoodFormat = false;
                     break;
                 }
             }
             if (dataGoodFormat){ 
+                while (row.length<12){
+                    row.push('');
+                }
                 row.push(fkUser);
                 csvData.push(row);
+                // if (row.length==12){
+                //     console.log(row)
+                // }
             }
         } else {
             console.log("Erreur pas les bonnes dimensions colonnes mysql")
@@ -169,8 +176,24 @@ function UploadCsvDataToMySQL(filePath, fkUser){
         // Remove Header ROW
         csvData.shift();
         if (csvData.length>0){
-            let query = 'INSERT INTO nomenclature (idPiece, denomination, qte, aliasFournisseur, matiere, brut, realisation, finition, refFournisseur, idProjet, idNomenclature, fkUser) VALUES ? ON DUPLICATE KEY UPDATE idNomenclature = idNomenclature';
-            connection.query(query, [csvData], async (error, response) => {
+            let stringVal = '';
+            for (var i=1;i<csvData.length;i++){
+                console.log(csvData.length)
+                console.log(i)
+                stringVal += '(?),';
+                if (csvData[i][10]=='') {
+                    date = new Date();
+                    csvData[i][10]= csvData[i][9] + '-' + i + date.getHours() + date.getMonth() + date.getFullYear();
+                } 
+                if (i==(csvData.length-1)){
+                    stringVal += '(?)';
+                    break;
+                }
+            }
+            let query = 'INSERT INTO nomenclature(idPiece, denomination, qte, aliasFournisseur, matiere, brut, realisation, finition, refFournisseur, idProjet, idNomenclature, prixUnitClient, fkUser) VALUES '+ stringVal +' ON DUPLICATE KEY UPDATE idNomenclature=idNomenclature';
+            console.log(stringVal);
+            console.log(csvData[0])
+            connection.query(query, csvData, async(error, response) => {
                 if (error){
                     console.log(error);
                 }
@@ -182,14 +205,13 @@ function UploadCsvDataToMySQL(filePath, fkUser){
                             console.log('MAJ lien fournisseur-nomenclature');
                         }
                     })
-
                 }
             });
         } else {
             console.log("Donnée dans le mauvais format");
         }
         // On delete apres avoir enregistrer le fichier
-    fs.unlinkSync(filePath)
+        fs.unlinkSync(filePath)
     }); 
     stream.pipe(csvStream);
 }   
