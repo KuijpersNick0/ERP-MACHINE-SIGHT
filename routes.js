@@ -37,6 +37,7 @@ router.use(session({
 router.get('/', (req, res) => res.redirect('/connection'));
 
 router.get('/projet', projetController.projetList);
+router.get('/projet/processStop', projetController.processStop);
 router.post('/projet/selectAll', projetController.selectAll);
 router.get('/projet/modifAllForm',projetController.modifAllForm);
 router.post('/projet/modifAllProjet', projetController.modifAllProjet);
@@ -101,7 +102,7 @@ router.post('/upload', upload.single("fileUpload"), (req, res) =>{
     let par = req.session.user;
     let fkUser;
     const sqlSelect = "SELECT pkUser FROM user WHERE pseudo=?;";
-    const select_query = connection.format(sqlSelect, [par]);
+    const select_query = connection.query(sqlSelect, [par]);
     //Determine fkUser
     if (par==null || par==undefined){
         fkUser = 1; //NUMERO SI PAS CONNECTE
