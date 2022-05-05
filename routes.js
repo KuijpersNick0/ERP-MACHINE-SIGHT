@@ -15,13 +15,15 @@ router.use(bodyParser.json());
 //Parse application/x-www-form-urlencoded
 router.use(bodyParser.urlencoded({extended: true}));
 //serving static files
-router.use('/uploads', express.static('uploads'));
+router.use('./controllers/uploads', express.static('uploads'));
 
 let projetController = require('./controllers/projetController');
 let fournisseurController = require('./controllers/fournisseurController');
-let articleController = require('./controllers/articleController');
 let bonCommandeController = require('./controllers/bonCommandeController');
 let nomenclatureController = require('./controllers/nomenclatureController');
+let userController = require('./controllers/userController');
+let clientController = require('./controllers/clientController');
+let pagePersoController = require('./controllers/pagePersoController');
 
 //utilisation session log-in
 let session = require('express-session');
@@ -31,92 +33,69 @@ router.use(session({
     saveUninitialized: true
 }));
 
-//Liste des routes vers controlleurs
-router.get('/', (req, res) => res.redirect('/fournisseurs'));
-
-router.get('/projet', projetController.projetList);
-router.get('/projet/fournisseur', projetController.goToFournisseur);
-router.get('/projet/article', projetController.goToArticle);
-router.get('/projet/bonCommande', projetController.goToBonCommande);
-router.get('/projet/nomenclature', projetController.goToNomenclature);
-router.get('/projet/ajoutProjet', projetController.ajoutProjetForm);
-router.post('/projet/ajoutProjet', projetController.ajoutProjet);
-router.post('/projet/inter/modification', projetController.projetModification);
-router.get('/projet/:index', projetController.deleteProjet);
-
-router.get('/fournisseurs', fournisseurController.fournisseurList);
-router.get('/fournisseurs/projet', fournisseurController.goToProjet);
-router.get('/fournisseurs/article', fournisseurController.goToArticle);
-router.get('/fournisseurs/bonCommande', fournisseurController.goToBonCommande);
-router.get('/fournisseurs/nomenclature', fournisseurController.goToNomenclature);
-router.get('/fournisseurs/ajoutFournisseur', fournisseurController.ajoutFournisseurForm);
-router.post('/fournisseurs/connection', fournisseurController.connection);
-router.post('/fournisseurs/ajoutFournisseur', fournisseurController.ajoutFournisseur);
-router.post('/fournisseurs/inter/modification', fournisseurController.fournisseurModification);
-router.get('/fournisseurs/:index', fournisseurController.deleteFournisseur);
-
-router.get('/article', articleController.articleList);
-router.get('/article/projet', articleController.goToProjet);
-router.get('/article/fournisseur', articleController.goToFournisseur);
-router.get('/article/bonCommande', articleController.goToBonCommande);
-router.get('/article/nomenclature', articleController.goToNomenclature);
-
-router.get('/bonCommande', bonCommandeController.bonCommandeList);
-router.get('/bonCommande/projet', bonCommandeController.goToProjet);
-router.get('/bonCommande/fournisseur', bonCommandeController.goToFournisseur);
-router.get('/bonCommande/article', bonCommandeController.goToArticle);
-router.get('/bonCommande/nomenclature', bonCommandeController.goToNomenclature);
-router.post('/bonCommande/enregistrement', bonCommandeController.enregistrementBonCommande);
-router.post('/bonCommande/inter/modification', bonCommandeController.bonCommandeModification);
-
-router.get('/nomenclature', nomenclatureController.nomenclatureList);
-router.get('/nomenclature/fournisseur', nomenclatureController.goToFournisseur);
-router.get('/nomenclature/article', nomenclatureController.goToArticle);
-router.get('/nomenclature/bonCommande', nomenclatureController.goToBonCommande);
-router.get('/nomenclature/projet', nomenclatureController.goToProjet);
-router.get('/nomenclature/resetPanier', nomenclatureController.resetPanier);
-router.get('/nomenclature/:index', nomenclatureController.nomenclatureAjoutListePDF);
-router.get('/nomenclature/inter/commandePDF', nomenclatureController.nomenclatureToPDF)
-router.post('/nomenclature/inter/modification', nomenclatureController.nomenclatureModification);
-router.post('/nomenclature/inter/ajoutPDF', nomenclatureController.nomenclatureAjoutPDF);
-
 //gere le stockage local pour upload nomenclature
+router.use(express.json({limit :'1mb'}));
 var storage = multer.diskStorage({
     destination: function(req, file, cb){
-        cb(null, './uploads');
+        cb(null, './controllers/uploads');
     },
     filename: function (req, file, cb) {
         cb(null, file.fieldname + Date.now() + path.extname(file.originalname));
     }
 });
 var upload = multer({storage: storage });
-router.use(express.json());
-// upload csv to database
-router.post('/upload-avatar', upload.single("fileUpload"), (req, res) =>{
-    UploadCsvDataToMySQL(__dirname + '/uploads/' + req.file.filename);
-    console.log('CSV file data has been uploaded in mysql database ');
-    res.redirect('/nomenclature');
-    });
-function UploadCsvDataToMySQL(filePath){
-    let stream = fs.createReadStream(filePath);
-    let csvData = [];
-    let csvStream = csv
-        .parse()
-        .on("data", function (data) {
-            csvData.push(data);
-        })
-        .on("end", function () {
-            // Remove Header ROW
-            csvData.shift();
 
-            let query = 'INSERT INTO nomenclature2 (idPiece, denomination, n_piece_plan, rev, qte, unite, matiere, brut, realisation, finition, traitementDeSurface, planEdite, fournisseur, refDescriptionFournisseur, prixnetUnitaireMS, remise, prixNetTotal, marge, prixunitclient, prixtotalclient, datedelivraisonprevue, statut,bonDeCommande, commentaire, numProjet, nomProjet, client) VALUES ? ON DUPLICATE KEY UPDATE idpiece = idpiece';
-            connection.query(query, [csvData], (error, response) => {
-                console.log(error || response);
-            });
-            // On delete apres avoir enregistrer le fichier
-            fs.unlinkSync(filePath)
-        }); 
-    stream.pipe(csvStream);
-}   
+//Liste des routes vers controlleurs
+router.get('/', (req, res) => res.redirect('/connection'));
+
+router.get('/projet', projetController.projetList);
+router.get('/projet/processStop', projetController.processStop);
+router.post('/projet/selectAll', projetController.selectAll);
+router.get('/projet/modifAllForm',projetController.modifAllForm);
+router.post('/projet/modifAllProjet', projetController.modifAllProjet);
+router.get('/projet/ajoutProjet', projetController.ajoutProjetForm);
+router.post('/projet/ajoutProjet', projetController.ajoutProjet);
+router.get('/projet/majPrixTotal', projetController.majPrixTotal);
+router.post('/projet/inter/modification', projetController.projetModification);
+router.get('/projet/:index', projetController.deleteProjet);
+
+router.get('/fournisseurs', fournisseurController.fournisseurList);
+router.post('/fournisseurs/selectAll', fournisseurController.selectAll);
+router.get('/fournisseurs/resetAll', fournisseurController.resetAll);
+router.get('/fournisseurs/modifAllForm',fournisseurController.modifAllForm);
+router.post('/fournisseurs/modifAllFournisseur', fournisseurController.modifAllFournisseur);
+router.get('/fournisseurs/ajoutFournisseur', fournisseurController.ajoutFournisseurForm);
+router.post('/fournisseurs/ajoutFournisseur', fournisseurController.ajoutFournisseur);
+router.post('/fournisseurs/inter/modification', fournisseurController.fournisseurModification);
+router.get('/fournisseurs/:index', fournisseurController.deleteFournisseur);
+
+router.get('/bonCommande', bonCommandeController.bonCommandeList);
+router.post('/bonCommande/selectAll', bonCommandeController.selectAll);
+router.get('/bonCommande/modifAllForm',bonCommandeController.modifAllForm);
+router.post('/bonCommande/modifAllBonCommande', bonCommandeController.modifAllBonCommande);
+router.post('/bonCommande/enregistrement', bonCommandeController.enregistrementBonCommande);
+router.post('/bonCommande/inter/modification', bonCommandeController.bonCommandeModification);
+router.get('/bonCommande/:index', bonCommandeController.deleteBonCommande);
+
+router.get('/nomenclature', nomenclatureController.nomenclatureList);
+router.get('/nomenclature/resetPanier', nomenclatureController.resetPanier);
+router.post('/nomenclature/selectAll', nomenclatureController.selectAll);
+router.get('/nomenclature/modifAllForm',nomenclatureController.modifAllForm);
+router.post('/nomenclature/modifAllNomenclature', nomenclatureController.modifAllNomenclature);
+router.get('/nomenclature/majPrixTotal', nomenclatureController.majPrixTotal);
+router.get('/nomenclature/ajoutNomenclature', nomenclatureController.ajoutNomenclatureForm);
+router.post('/nomenclature/ajoutNomenclature', nomenclatureController.ajoutNomenclature);
+router.post('/nomenclature/inter/modification', nomenclatureController.nomenclatureModification);
+router.get('/nomenclature/inter/commandePDF', nomenclatureController.nomenclatureToPDF)
+router.get('/nomenclature/:index', nomenclatureController.nomenclatureAjoutListePDF);
+
+router.get('/connection', userController.connection);
+router.post('/connection/login', userController.login);
+
+router.get('/client', clientController.clientList);
+
+router.get('/pagePerso/projet/:index', pagePersoController.projetPage);
+
+router.post('/upload', upload.single("fileUpload"), nomenclatureController.upload);
 
 module.exports = router;
