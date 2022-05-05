@@ -85,6 +85,7 @@ exports.ajoutFournisseur = function(req, res){
     let listeFournisseur = req.body.listeFournisseur;
     let nomPrenom = req.body.nomPrenom;
     let societe = req.body.societe;
+    let alias = req.body.alias;
     let adresse1 = req.body.adresse1;
     let adresse2 = req.body.adresse2;
     let cPostal = req.body.cPostal;
@@ -99,11 +100,11 @@ exports.ajoutFournisseur = function(req, res){
     let langue = req.body.langue;
     let remarques = req.body.remarques;
     let tauxEchange = req.body.tauxEchange;
-    let newFournisseur = new Fournisseur(idFournisseur, listeFournisseur, nomPrenom, societe, adresse1, adresse2, cPostal, ville, pays, telephone, portable, site, email, nTVA, tauxTVA, langue, remarques, tauxEchange); //tauxECHange a rajout
+    let newFournisseur = new Fournisseur(idFournisseur, listeFournisseur, nomPrenom, societe, alias, adresse1, adresse2, cPostal, ville, pays, telephone, portable, site, email, nTVA, tauxTVA, langue, remarques, tauxEchange); 
     fournisseurList0.push(newFournisseur);
     //Rajouter check idFournisseur unique
-    const sqlInsert = "INSERT INTO fournisseur(idFournisseur,listeFournisseur,nomPrenom, societe, adresse1, adresse2, cPostal, ville, pays, telephone, portable, site, email, nTVA, tauxTVA, langue, remarques, tauxEchange) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE idFournisseur=idFournisseur";
-    let todo = [idFournisseur, listeFournisseur, nomPrenom, societe, adresse1, adresse2, cPostal, ville, pays, telephone, portable, site, email, nTVA, tauxTVA, langue, remarques, tauxEchange];
+    const sqlInsert = "INSERT INTO fournisseur(idFournisseur,listeFournisseur, nomPrenom, societe, alias, adresse1, adresse2, cPostal, ville, pays, telephone, portable, site, email, nTVA, tauxTVA, langue, remarques, tauxEchange) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON DUPLICATE KEY UPDATE idFournisseur=idFournisseur";
+    let todo = [idFournisseur, listeFournisseur, nomPrenom, societe, alias, adresse1, adresse2, cPostal, ville, pays, telephone, portable, site, email, nTVA, tauxTVA, langue, remarques, tauxEchange];
     connection.query(sqlInsert, todo, function(err, result){
         if (err) throw err;
         console.log("ajout bdd");
