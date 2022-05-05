@@ -9,15 +9,24 @@
 // connection.connect(function(error) {if(error) console.log(error);});
 
 const mariadb = require("mariadb/callback");
+
+// const connection = mariadb.createConnection({
+//     host    :'192.168.14.200',
+//     port    :'3306',
+//     user    :'admin_erp',
+//     password:'Aye@69OO_ERP',
+//     database:'ERP_MS',
+//     charset :'utf8'
+// });
+
 const connection = mariadb.createConnection({
     host    :'192.168.14.200',
     port    :'3306',
-    user    :'admin_erp',
-    password:'Aye@69OO_ERP',
-    database:'ERP_MS',
+    user    :'ERP_Test',
+    password:'ERP1pwd_Test',
+    database:'ERP_TEST',
     charset :'utf8'
 });
-
 
 
 module.exports = connection; 

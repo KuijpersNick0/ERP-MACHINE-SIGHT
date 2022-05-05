@@ -15,7 +15,7 @@ router.use(bodyParser.json());
 //Parse application/x-www-form-urlencoded
 router.use(bodyParser.urlencoded({extended: true}));
 //serving static files
-router.use('/uploads', express.static('uploads'));
+router.use('./controllers/uploads', express.static('uploads'));
 
 let projetController = require('./controllers/projetController');
 let fournisseurController = require('./controllers/fournisseurController');
@@ -32,6 +32,18 @@ router.use(session({
     resave: false,  
     saveUninitialized: true
 }));
+
+//gere le stockage local pour upload nomenclature
+router.use(express.json({limit :'1mb'}));
+var storage = multer.diskStorage({
+    destination: function(req, file, cb){
+        cb(null, './controllers/uploads');
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.fieldname + Date.now() + path.extname(file.originalname));
+    }
+});
+var upload = multer({storage: storage });
 
 //Liste des routes vers controlleurs
 router.get('/', (req, res) => res.redirect('/connection'));
@@ -84,135 +96,6 @@ router.get('/client', clientController.clientList);
 
 router.get('/pagePerso/projet/:index', pagePersoController.projetPage);
 
-//gere le stockage local pour upload nomenclature
-var storage = multer.diskStorage({
-    destination: function(req, file, cb){
-        cb(null, './uploads');
-    },
-    filename: function (req, file, cb) {
-        cb(null, file.fieldname + Date.now() + path.extname(file.originalname));
-    }
-});
+router.post('/upload', upload.single("fileUpload"), nomenclatureController.upload);
 
-var upload = multer({storage: storage });
-router.use(express.json({limit :'1mb'}));
-
-// upload csv to database
-router.post('/upload', upload.single("fileUpload"), (req, res) =>{
-    let par = req.session.user;
-    let fkUser;
-    const sqlSelect = "SELECT pkUser FROM user WHERE pseudo=?;";
-    const select_query = connection.query(sqlSelect, [par]);
-    //Determine fkUser
-    if (par==null || par==undefined){
-        fkUser = 1; //NUMERO SI PAS CONNECTE
-        UploadCsvDataToMySQL(__dirname + '/uploads/' + req.file.filename, fkUser);
-    } else{
-        get_fkUser = function(){
-            //Eviter js callback hell
-            return new Promise(function(resolve, reject){
-                connection.query(select_query, (error, resultSQL) => {
-                    if (error) throw error;
-                    else if (resultSQL.length!=0) {
-                        resolve(resultSQL[0].pkUser);
-                    } else {
-                        reject(new Error("No result"));
-                    }
-                })
-            })
-        }
-        get_fkUser()
-        .then(function(result){
-            fkUser = result;
-            UploadCsvDataToMySQL(__dirname + '/uploads/' + req.file.filename, fkUser);
-        })
-        .catch(function(error){
-            console.log("Promise rejection error: " + error);
-        })
-    }
-    res.redirect('/nomenclature');
-});
-
-function UploadCsvDataToMySQL(filePath, fkUser){
-    if (filePath.charCodeAt(0) === 0xFEFF) {
-        //Fichier excell en UTF8-BOM et non pas UTF8, ce if strip le BOM qui génere caractère défectueux
-        filePath = stream.substr(filePath);
-    }
-    let stream = fs.createReadStream(filePath);
-    let csvData = [];
-    let csvStream = csv
-    .parse()
-    .on('error', () => {
-        console.log("Fichier csv illisible");
-    })
-    .on("data", (row) => {
-        let dataGoodFormat = true;
-        if (row.length < 14){
-            for (var i=0; i<row.length; i++){
-                if (row[i].length<70){                   
-                    //console.log("data bonne taille");
-                } else {
-                    console.log("Element de colonne dépasse les 70 caractères authorisé");
-                    csvData.length = 0;
-                    dataGoodFormat = false;
-                    break;
-                }
-            }
-            if (dataGoodFormat){ 
-                while (row.length<12){
-                    row.push('');
-                }
-                row.push(fkUser);
-                csvData.push(row);
-                // if (row.length==12){
-                //     console.log(row)
-                // }
-            }
-        } else {
-            console.log("Erreur pas les bonnes dimensions colonnes mysql")
-        }
-    })
-    .on("end", function () {
-        // Remove Header ROW
-        csvData.shift();
-        if (csvData.length>0){
-            let stringVal = '';
-            for (var i=1;i<csvData.length;i++){
-                console.log(csvData.length)
-                console.log(i)
-                stringVal += '(?),';
-                if (csvData[i][10]=='') {
-                    date = new Date();
-                    csvData[i][10]= csvData[i][9] + '-' + i + date.getHours() + date.getMonth() + date.getFullYear();
-                } 
-                if (i==(csvData.length-1)){
-                    stringVal += '(?)';
-                    break;
-                }
-            }
-            let query = 'INSERT INTO nomenclature(idPiece, denomination, qte, aliasFournisseur, matiere, brut, realisation, finition, refFournisseur, idProjet, idNomenclature, prixUnitClient, fkUser) VALUES '+ stringVal +' ON DUPLICATE KEY UPDATE idNomenclature=idNomenclature';
-            console.log(stringVal);
-            console.log(csvData[0])
-            connection.query(query, csvData, async(error, response) => {
-                if (error){
-                    console.log(error);
-                }
-                else{
-                    console.log('CSV file data has been uploaded in mysql database');
-                    await connection.query("call nomenclature_fournisseur_upload();", (error, response) => {
-                        if (error) throw error;
-                        else {
-                            console.log('MAJ lien fournisseur-nomenclature');
-                        }
-                    })
-                }
-            });
-        } else {
-            console.log("Donnée dans le mauvais format");
-        }
-        // On delete apres avoir enregistrer le fichier
-        fs.unlinkSync(filePath)
-    }); 
-    stream.pipe(csvStream);
-}   
 module.exports = router;
