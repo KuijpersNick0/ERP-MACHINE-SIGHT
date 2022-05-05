@@ -22,7 +22,7 @@
         <a class ="bouton" href="/connection">Connection</a>
     </div>
 
-    <a class ="bouton" href="/nomenclature/resetPanier">Reset panier BDC </a>
+    <a class ="bouton" href="/nomenclature/resetPanier" onclick="deselectAll()">Reset panier BDC </a>
     <a class ="bouton" href="/nomenclature/inter/commandePDF" > Génèrer BDC </a> 
     <a class ="bouton" href="javascript:void(0)" onclick="selectAll()">Select all</a>
     <a class ="bouton" href="/nomenclature/modifAllForm">Modifier all</a>
@@ -303,8 +303,9 @@
                     //Parcourir tag tr et boucle condit sur if
                     let elem = 0;
                     if (tr[i].style.display=="") {
-                    elem = document.getElementById("idNomenclature"+ (i - 1));
-                    idNomenclatures.push(elem.innerHTML.trim());
+                        elem = document.getElementById("idNomenclature"+ (i - 1));
+                        tr[i].style.backgroundColor="lightskyblue";
+                        idNomenclatures.push(elem.innerHTML.trim());
                     }
                 }
                 const data = {idNomenclatures};
@@ -316,6 +317,17 @@
                 body: JSON.stringify(data)
                 };
                 fetch('./nomenclature/selectAll', options);
+            }
+        }
+
+        function deselectAll() {
+            table = document.getElementById("myTable");
+            tr = table.getElementsByTagName("tr");
+            for (var i=1; i<tr.length; i++){
+                //Parcourir tag tr et boucle condit sur if
+                if (tr[i].style.display=="") {
+                    tr[i].style.backgroundColor="";
+                }
             }
         }
 
