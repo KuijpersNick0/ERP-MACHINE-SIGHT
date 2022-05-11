@@ -1,5 +1,6 @@
 # ERP-MACHINE-SIGHT
 Developpement ERP pendant mon stage BA3 sur une periode de 4 semaines. 
+/n
 "dependencies": {
     "body-parser": "^1.20.0",
     "cors": "^2.8.5",
