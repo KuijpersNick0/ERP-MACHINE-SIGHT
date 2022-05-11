@@ -69,8 +69,14 @@
     </select>
     <input type="text" id="myInput2" onkeyup="filterFunction2()" placeholder="Search for..">
 
-    <form action="/upload" enctype="multipart/form-data" method="post">
+    <form action="/upload" enctype="multipart/form-data" method="post" style="padding: 10px">
         <label style="font-weight:bold;">Upload nomenclature</label>
+        <input type="file" name="fileUpload" >
+        <input type="submit">
+    </form>  
+
+    <form action="/upload/special" enctype="multipart/form-data" method="post" style="padding: 10px;">
+        <label style="font-weight:bold;">Upload nomenclature sans idNomenclature avec idProjet</label>
         <input type="file" name="fileUpload" >
         <input type="submit">
     </form>  

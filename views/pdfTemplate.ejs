@@ -255,8 +255,8 @@
                 <p style="text-indent: 0pt;text-align: left;"><br/></p>
             </td>
             <td style="width:187pt">
-                <p class="s10" style="padding-left: 45pt;text-indent: 0pt;line-height: 7pt;text-align: left;"  name="datedelivraisonprevue" >Date de livraison:
-                    <span class="s11">  </span><b><%=nomenclatureElemPDF[0].livraisonPrevue %></b></p>
+                <p class="s10" style="padding-left: 45pt;text-indent: 0pt;line-height: 7pt;text-align: left;" >Date de livraison:
+                    <span class="s11">  </span><b name="datedelivraisonprevue" id="datedelivraisonprevue"> </b></p>
             </td>
             <td style="width:115pt">
                 <p style="text-indent: 0pt;text-align: left;"><br/></p></td>
@@ -287,11 +287,11 @@
         <% for (var i=0; i<nomenclatureElemPDF.length; i++){ %>
         <tr style="height:29pt">
             <td style="width:17pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt"><br/></p>
-                <p class="s5" style="padding-left: 6pt;text-indent: 0pt;text-align: left;">1 </p>
+                <p class="s5" style="padding-left: 6pt;text-indent: 0pt;text-align: left;"><%=i%> </p>
             </td> 
             <td style="width:253pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt">
                 <p style="text-indent: 0pt;text-align: left;"><br/></p>
-                <p class="s13" style="padding-left: 1pt;text-indent: 0pt;text-align: left;" name="idPiece" ><%=nomenclatureElemPDF[i].idPiece %> - <%=nomenclatureElemPDF[i].denomination %> </p>
+                <p class="s13" style="padding-left: 1pt;text-indent: 0pt;text-align: left;" name="idPiece" >  <%=nomenclatureElemPDF[i].idPiece %> - <%=nomenclatureElemPDF[i].denomination %> </p>
             </td>
             <td style="width:48pt;border-top-style:solid;border-top-width:1pt;border-left-style:solid;border-left-width:1pt;border-bottom-style:solid;border-bottom-width:1pt;border-right-style:solid;border-right-width:1pt">
                 <p style="text-indent: 0pt;text-align: left;"><br/></p>
@@ -317,10 +317,15 @@
             for (var j = 0; j<sum;j++){
                 let qte = document.getElementById("qte<%=i%>").innerHTML;
                 let prixunitclient = document.getElementById("prixunitclient<%=i%>").innerHTML;
-                prixunitclient = prixunitclient.replace('<%=fournisseur.tauxEchange%>','');
-                let remise = document.getElementById("remise<%=i%>").innerHTML;
-                remise = remise.replace('%','');
-                document.getElementById("prixNetTotal<%=i%>").innerHTML = (parseFloat(prixunitclient)*parseFloat(qte)*(1-(parseFloat(remise)/100))).toFixed(2) ;
+                prixunitclient = prixunitclient.replace('<%=fournisseur.tauxEchange%>',''); 
+                if (document.getElementById("remise<%=i%>").innerHTML.replace('%','') != ' '){ 
+                    let remise = document.getElementById("remise<%=i%>").innerHTML;
+                    remise = remise.replace('%',''); 
+                    document.getElementById("prixNetTotal<%=i%>").innerHTML = (parseFloat(prixunitclient)*parseFloat(qte)*(1-(parseFloat(remise)/100))).toFixed(2);
+                } else { 
+                    let remise = 0;
+                    document.getElementById("prixNetTotal<%=i%>").innerHTML = (parseFloat(prixunitclient)*parseFloat(qte)*(1-(parseFloat(remise)/100))).toFixed(2);
+                }
             }
         </script>
         <% } %>
@@ -328,9 +333,9 @@
     <p style="text-indent: 0pt;text-align: left;"><br/></p>
     <p style="padding-left: 10; text-indent: 0pt;text-align: left;">Address of delivery :</p>
     <p style="padding-left: 10; padding-top: 1pt;text-indent: 0pt;text-align: left;">MachineSight - Rue de la Croix Bande 15 - 6900 Marloie</p>
-    <p style="padding-left: 5pt;text-indent: 0pt;text-align: left;"/>
+    <p style="padding-left: 5pt;text-indent: 0pt;text-align: left;">
     <p style="text-indent: 0pt;text-align: left;"><br/></p>
-    <h1 style="padding-top: 3pt;padding-left: 72pt;text-indent: 0pt;text-align: left;" name="nameUser"> <%=user.nomPrenom %> </h1>
+    <h1 style="padding-top: 3pt;padding-left: 72pt;text-indent: 0pt;text-align: left;" name="nomPrenom"> <%=user.nomPrenom %> </h1>
     <p class="s15" style="padding-top: 1pt;padding-left: 73pt;text-indent: 0pt;text-align: left;" name="poste"> <%=user.poste %> </p>
     <table style="border-collapse:collapse;margin-left:275.855pt" cellspacing="0">
         <tr style="height:9pt">
@@ -399,8 +404,10 @@
     <button id="printPageButton" onclick="window.location='../../nomenclature';" style="padding:1pt; position: relative; bottom: -150px; left: 10px; right: 5px;">Retourner liste nomenclature</button>
     <button id="printPageButton" class ="bouton" onclick= ajouteBonCommande() method="POST" style="padding: 1pt; margin-left: 50pt; position: relative; bottom: -150px; left: 10px; right: 5px;" >Enregistrement bon de commande</button>
 
-    <input id="printPageButton" class="referenceInput" type="text" name="reference" placeholder="Inserer reference BDC" />
-    <button id="printPageButton" class="bouton" onclick= ajouteReference() >Ajouter réference </button>
+    <input id="printPageButton" class="referenceInput" type="text" name="reference" placeholder="Inserer reference BDC" style="position: relative; bottom: -40px; left: 250px; right: 5px;" />
+    <button id="printPageButton" class="bouton" onclick= ajouteReference() style="position: relative; bottom: -40px; left: 250px; right: 5px;" >Ajouter réference </button>
+    <input id="printPageButton" class="dateLivraisonInput" type="date" name="dateLivraison" placeholder="Inserer date livraison BDC" style="position: relative; bottom: -70px; left: 10px; right: 5px;" />
+    <button id="printPageButton" class="bouton" onclick= ajouteDateLivraison() style="position: relative; bottom: -70px; left: 10px; right: 5px;" >Ajouter dateLivraison </button>
 
     <script charset="utf-8" >
         function ajouteBonCommande() {
@@ -411,13 +418,14 @@
             let TVAC = document.getElementById("TVAC").innerHTML.replace(monnaieEchange,''); //prixTotal
             let dateCommande = document.getElementById("currentDate").innerHTML;
             let numOffreFournisseur = document.getElementById("reference").innerHTML;
+            let dateLivraison = document.getElementById("datedelivraisonprevue").innerHTML;
             
             let mesArticles = [];
             <% for (var i=0; i<nomenclatureElemPDF.length; i++){ %>
                 mesArticles.push(<%=nomenclatureElemPDF[i].pkNomenclature%>);
             <% } %> 
             
-            data = {idBonCommande, idProjet, idFournisseur, pseudo, TVAC, dateCommande, numOffreFournisseur, mesArticles};
+            data = {idBonCommande, idProjet, idFournisseur, pseudo, TVAC, dateCommande, numOffreFournisseur, mesArticles,dateLivraison};
             const options = {
                     method: 'POST',
                     redirect: 'follow',
@@ -459,7 +467,11 @@
             let reference = document.getElementById("reference");
             reference.innerHTML = referenceInput;
         }
-
+        function ajouteDateLivraison() {
+            let referenceInput = document.getElementsByClassName("dateLivraisonInput")[0].value;
+            let reference = document.getElementById("datedelivraisonprevue");
+            reference.innerHTML = referenceInput;
+        }
     </script>
 </body>
 </html>

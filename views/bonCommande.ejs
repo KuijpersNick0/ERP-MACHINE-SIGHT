@@ -17,6 +17,7 @@
         <a class ="bouton" href="/fournisseurs">Liste fournisseurs</a>
         <a class ="bouton" href="/projet">Liste projets</a>
         <a class ="bouton" href="/nomenclature">Liste nomenclatures</a>
+        <a class="bouton" href="/client"> Liste clients</a>
         <a class ="bouton" href="/connection">Connection</a>
     </div>
 
@@ -25,6 +26,7 @@
 
     <table id="myTable">
         <tr class="header">
+            <th>Delete</th>
             <th>idBonCommande</th>
             <th>ref Fournisseur</th>
             <th>description</th>
@@ -43,10 +45,13 @@
             <th>remarques</th>
             <th>DescriptionpProjet</th>
             <th>client</th>
-            <th>nomPrenomFournisseur</th>
+            <th>aliasFournisseur</th>
         </tr>
         <% for (var i=0; i<bonCommande.length; i++){ %>
         <tr>
+                <td>
+                    <a class="bouton" href="/bonCommande/<%=bonCommande[i].idBonCommande %> ">Delete</a>
+                </td>
                 <td id="idBonCommande<%=i%>" name="idBonCommande">
                     <%=bonCommande[i].idBonCommande %> 
                 </td>
@@ -62,7 +67,7 @@
                 <td contenteditable='true' id="<%=i%>" class="remise">
                     <%=bonCommande[i].remise%> 
                 </td>
-                <td contenteditable='true' id="<%=i%>" class="idProjet">
+                <td id="idProjet<%=i%>" class="idProjet" onclick="ToProjet(<%=i%>)">
                     <%=bonCommande[i].idProjet%> 
                 </td>
                 <td contenteditable='true' id="<%=i%>" class="idFournisseur">
@@ -74,9 +79,18 @@
                 <td contenteditable='true' id="<%=i%>" class="dateEcheance">
                     <%=bonCommande[i].dateEcheance%> 
                 </td>
-                <td contenteditable='true' id="<%=i%>" class="statut">
-                    <%=bonCommande[i].statut%> 
-                </td>
+                <!--
+                    <td contenteditable='true' id="<%=i%>" class="statut">
+                        <%=bonCommande[i].statut%> 
+                    </td>
+                -->
+                <td>    
+                    <select name="<%=bonCommande[i].statut%>" class="statut" id="<%=i%>" onchange="changeStatut(this, <%=i%>)">
+                        <option></option>
+                        <option id="prevu<%=i%>"> prevu</option>
+                        <option id="recept<%=i%>"> recept</option>
+                    </select>
+                </td>        
                 <td contenteditable='true' id="<%=i%>" class="par">
                     <%=bonCommande[i].par%> 
                 </td>
@@ -101,8 +115,8 @@
                 <td contenteditable='true' id="<%=i%>" class="client">
                     <%=bonCommande[i].client%> 
                 </td>
-                <td contenteditable='true' id="<%=i%>" class="nomPrenomFournisseur">
-                    <%=bonCommande[i].nomPrenomFournisseur%> 
+                <td id="<%=i%>" class="aliasFournisseur">
+                    <%=bonCommande[i].aliasFournisseur%> 
                 </td>
         </tr>
         <% } %> 
@@ -119,6 +133,55 @@
             document.getElementById("mySidenav").style.width = "0";
             document.getElementById("main").style.marginLeft = "0";
             document.body.style.backgroundColor = "white";
+        }
+
+        window.onload = function() {
+        //Deplace le selected pour statut de options sur données BDD 
+            let statut = document.getElementsByClassName("statut");
+            //Gere la couleur de statut / DEUXIEME FOR  
+            let dateEcheance = document.getElementsByClassName("dateEcheance");
+            let dateLivraison = [];
+            let date = new Date();
+            for (var i=0; i<statut.length; i++){
+                let name = statut[i].getAttribute("name");
+                let myID = statut[i].getAttribute("id");
+                let mySelected;  
+                switch (name) {
+                    case "prevu": 
+                        mySelected = document.getElementById("prevu"+myID);
+                        mySelected.selected = true
+                        break;
+                    case "recept":
+                        mySelected = document.getElementById("recept"+myID);
+                        mySelected.selected = true
+                        break;
+                    default:
+                        console.log("Pas la bonne valeur statut");
+
+                }
+            }
+            for (var i=0; i<dateEcheance.length;i++){
+                dateLivraison.push(new Date(Date.parse(dateEcheance[i].innerHTML.trim())));   
+                if (dateLivraison[i]!='Invalid Date' && statut[i].getAttribute("name")!="recept"){
+                    if (date<=dateLivraison[i]){
+                        statut[i].style.backgroundColor="orange";                        
+                    } else {
+                        statut[i].style.backgroundColor="red";
+                    }
+                }else if (statut[i].getAttribute("name")=="recept") {
+                    statut[i].style.backgroundColor="lightgreen";                        
+                }
+            }
+        }
+
+        function ToProjet(id){
+            let idProjet = document.getElementById("idProjet"+id).innerHTML.trim();
+            if (confirm('Tu veux naviguer vers la page projet de '+ idProjet +' ?')) {
+                var href = '/pagePerso/projet/'+idProjet;
+                window.open(href);
+            } else {
+                console.log('Cancel');
+            }
         }
 
         function selectAll() {
@@ -150,7 +213,7 @@
 
 
         function myFunction() {
-          // Declare variables
+          // Filtre
           var input, filter, table, tr, td, i, txtValue;
           input = document.getElementById("myInput");
           filter = input.value.toUpperCase();
@@ -170,6 +233,22 @@
               }
             }
           }
+        }
+
+        function changeStatut(selectObject, id){
+            const newData = selectObject.value;  
+            let stringID = 'idBonCommande' + id;
+            const myID = document.getElementById(stringID).innerHTML;
+            const myColumn = "statut";
+            const data = {newData, myID, myColumn};
+                const options = {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type':'application/json'
+                    },
+                body: JSON.stringify(data)
+                };
+                fetch('./bonCommande/inter/modification', options);
         }
 
         //Pour trigger modification et envoyer avec post method
