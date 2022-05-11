@@ -9,6 +9,8 @@ let projetController0 = require('../controllers/projetController');
 const { parseString } = require('fast-csv');
 var fs = require('fs');
 const csv = require('fast-csv');
+const { Console } = require('console');
+const { resolve } = require('path');
 
 let nomenclatureList = [];
 let nomenclatureListPDF = [];
@@ -22,19 +24,21 @@ let idBonCommandeTemp;
 let idNomenclatures = [];
 let dictFournisseurNMCLT = {};
 
+let nomenclatureListUpload = [];
+const idNomenclatureSet = new Set();
+let uncleanListUpload = [];
+
 exports.nomenclatureList = async function(request, response){
     //affiche la liste des projet
     nomenclatureList.length = 0;
     const sqlProcedure = "call maj_fk_nomenclature()";
-    const procedure_query = connection.query(sqlProcedure);
     const sqlSelect = "SELECT * FROM nomenclature_view";
-    const select_query = connection.query(sqlSelect);
     
-    await connection.query(procedure_query, async (error0, resultSQL0) => {
+    await connection.query(sqlProcedure, async (error0, resultSQL0) => {
         if (error0){
             console.log(error0);
         } else {
-            await connection.query(select_query, (error, resultSQL) => {
+            await connection.query(sqlSelect, (error, resultSQL) => {
                 if (error){
                     console.log(error);
                 } else {
@@ -76,7 +80,7 @@ exports.nomenclatureAjoutListePDF = async function(req, res) {
     for (var i=0;i<nomenclatureListPDF.length;i++){
         for (var j=0; j<mesFournisseur.length; j++){
             if (nomenclatureListPDF[i].idFournisseur==mesFournisseur[j].idFournisseur){
-                myFournisseurSet.add(mesFournisseur[j].fournisseur)
+                myFournisseurSet.add(mesFournisseur[j].alias)
             }
         }
     }
@@ -92,6 +96,7 @@ exports.nomenclatureAjoutListePDF = async function(req, res) {
             }
         }
     }
+    //console.log(dictFournisseurNMCLT)
     res.redirect('/nomenclature');
 }
 
@@ -117,7 +122,7 @@ exports.resetPanier = function(request, response){
     nomenclatureDejaInscrit.length=0;
     monProjet=0;
     monProjetID=0;
-    idBonCommandeTemp='init';
+    idBonCommandeTemp = 'init';
     console.log("Reset effectué");
 }
 
@@ -146,7 +151,7 @@ exports.nomenclatureToPDF = async function(request, response){
             idBonCommandeTemp+=1;
         }
         for (var i=0;i<mesUser.length; i++){
-            if (monPseudo==mesUser[i].pseudo){
+            if (monPseudo.toUpperCase()==mesUser[i].pseudo.toUpperCase()){
                 monUser = mesUser[i];
                 break;
             }
@@ -164,7 +169,7 @@ exports.nomenclatureToPDF = async function(request, response){
                 break;
             }
         }
-        let iterate = Object.keys(dictFournisseurNMCLT).length;
+        let iterate = Object.keys(dictFournisseurNMCLT).length; 
         if (monFournisseur!=null && monUser!=null && monProjet!=null && Object.keys(dictFournisseurNMCLT).length!=0){
             response.render('pdfTemplate.ejs', {nomenclatureElemPDF:valeurFournisseur, fournisseur :monFournisseur, user : monUser, projet: monProjet, idBonCommande: idBonCommandeTemp, iterate : iterate}); 
             //Je loop mes fournisseurs : nodejs me permet d ouvrir qu'une seule fenetre à la fois  
@@ -189,7 +194,8 @@ exports.nomenclatureModification = async function(request, response){
         //modification sur une view de plusieurs tableaux impossible, je dois segmenter les modifications
         //Contrairement au bon de commande idFournisseur et idProjet son dans la table et modifié avec "stored procedures" mysql. 
         //Ce choix est fait car l'upload de nomenclature ne permet pas d'initier les fkeys 
-    let nomenclatureArray = ["idFournisseur", "idProjet", "fournisseur", "denomination", "rev", "qte", "unite", "matiere" , "brut", "realisation", "finition", "traitementDeSurface", "planEdite", "livraisonPrevue", "statut", "commentaire", "prixUnitMS", "prixUnitClient", "remise", "prixNetTotal", "marge", "prixTotalClient", "effectue", "refCommande", "montantDepense", "refFournisseur", "spareParts"];
+    let nomenclatureArray = ["idFournisseur", "idProjet", "fournisseur", "rev", "qte", "unite", "matiere" , "brut", "realisation", "finition", "traitementDeSurface", "planEdite", "livraisonPrevue", "statut", "commentaire", "prixUnitMS", "prixUnitClient", "remise", "prixNetTotal", "marge", "prixTotalClient", "effectue", "refCommande", "montantDepense", "refFournisseur", "spareParts"];
+    let nomenclatureArrayBIG = ["denomination"];
     let projetArray = ["nomProjet"];
     let clientArray = ["client"];
     let userArray = ["par"];
@@ -202,7 +208,7 @@ exports.nomenclatureModification = async function(request, response){
             break;
         }
     }
-    if (newData.length<45 && nomenclatureArray.includes(myColumn)) {
+    if (newData.length<45 && nomenclatureArray.includes(myColumn) || newData.length<70 && nomenclatureArrayBIG.includes(myColumn)) {
         connection.query('UPDATE nomenclature SET ' + connection.escapeId(myColumn) + '=? WHERE idNomenclature=?;',[newData,myID], function(error, resultSQL){
             if (error) throw error;
             else{
@@ -212,13 +218,11 @@ exports.nomenclatureModification = async function(request, response){
         if (myColumn=="statut" && newData=="recept" && monArticle.fkBonCommande!=null){
             //Si tout mes statuts lié au bon de commande sont en recept j'update le bon de commande en recept
             const sqlSelect = 'SELECT (SELECT COUNT(fkBonCommande) FROM nomenclature WHERE fkBonCommande=? AND statut=?) AS sum0, (SELECT COUNT(statut) FROM nomenclature WHERE fkBonCommande=?) AS sum1 FROM nomenclature';
-            const select_query = connection.query(sqlSelect, [monArticle.fkBonCommande, newData, monArticle.fkBonCommande]);
             const sqlUpdate = 'UPDATE boncommande SET statut=? WHERE idBonCommande=?';
-            const update_query = connection.query(sqlUpdate, [newData, monArticle.fkBonCommande]);
-            await connection.query(select_query, async (error, resultSQL) => {
+            await connection.query(sqlSelect, [monArticle.fkBonCommande, newData, monArticle.fkBonCommande], async (error, resultSQL) => {
                 if (error) throw error
                 else if (resultSQL[0].sum0 == resultSQL[0].sum1){
-                    await connection.query(update_query, (error, resultSQL) => {
+                    await connection.query(sqlUpdate, [newData, monArticle.fkBonCommande],(error, resultSQL) => {
                         if (error) throw error;
                         else {
                             console.log("MAJ dans bon de commande recept all")
@@ -231,13 +235,27 @@ exports.nomenclatureModification = async function(request, response){
     else if(newData.length<45 && projetArray.includes(myColumn) && monArticle.fkProjet!=null) {
         switch (myColumn) {
             case "nomProjet":
-                myColumn="nom";
-                connection.query('UPDATE projet SET ' + connection.escapeId(myColumn) + ' = ? WHERE pkProjet = ?;', [newData,monArticle.fkProjet], function(error, resultSQL) {
-                    if (error) throw error;
-                    else{
-                        console.log("modif enregistrer en bdd");
+                myColumn='nom';
+                const sqlSelect = "SELECT pkProjet FROM projet WHERE nom=?";
+                const sqlUpdate = "UPDATE nomenclature SET fkProjet=? WHERE idNomenclature=?";
+                await connection.query(sqlSelect, [newData], async(error, resultSQL) => {
+                    if (error) throw (error)
+                    else {
+                        if (resultSQL.length != 0){
+                            for (var j=0; j<resultSQL.length; j++){
+                                todo = resultSQL[j].pkProjet;
+                            }
+                            await connection.query(sqlUpdate, [todo, myID], (error, resultSQL) => {
+                                if (error) throw error;
+                                else {
+                                    console.log("MAJ nomenclature et projet");
+                                }
+                            })
+                        } else {
+                            console.log("pkProjet invalide");
+                        }
                     }
-                });
+                })
                 break;
             default:
                 console.log("défaut switch modif nomenclature->projet");
@@ -262,13 +280,27 @@ exports.nomenclatureModification = async function(request, response){
         switch(myColumn){
             case "client":
                 myColumn = "nomPrenom";
-                connection.query('UPDATE client SET ' + connection.escapeId(myColumn) + ' = ? WHERE pkClient = ?;', [newData,monArticle.fkClient], function(error, resultSQL) {
-                    if (error) throw error;
-                    else{
-                        console.log("modif enregistrer en bdd");
+                const sqlSelect = "SELECT pkClient FROM client WHERE nomPrenom=?";
+                const sqlUpdate = "UPDATE nomenclature SET fkClient=? WHERE idNomenclature=?";
+                await connection.query(sqlSelect, [newData], async(error, resultSQL) => {
+                    if (error) throw (error)
+                    else {
+                        if (resultSQL.length != 0){
+                            for (var j=0; j<resultSQL.length; j++){
+                                todo = resultSQL[j].pkClient;
+                            }
+                            await connection.query(sqlUpdate, [todo, myID], (error, resultSQL) => {
+                                if (error) throw error;
+                                else {
+                                    console.log("MAJ nomenclature et client");
+                                }
+                            })
+                        } else {
+                            console.log("pkClient invalide");
+                        }
                     }
-                });
-            break;
+                })
+                break;
             default:
                 console.log("défaut switch modif nomenclature->client");
         } 
@@ -276,13 +308,27 @@ exports.nomenclatureModification = async function(request, response){
     else if (newData.length<45 && userArray.includes(myColumn) && monArticle.fkUser!=null ){
         switch(myColumn){
             case "par":
-                myColumn = "pseudo";
-                connection.query('UPDATE user SET ' + connection.escapeId(myColumn) + ' = ? WHERE pkUser = ?;', [newData,monArticle.fkUser], function(error, resultSQL) {
-                    if (error) throw error;
-                    else{
-                        console.log("modif enregistrer en bdd");
+                myColumn = "fkUser";
+                const sqlSelect = "SELECT pkUser FROM user WHERE UPPER(pseudo)=?";
+                const sqlUpdate = "UPDATE nomenclature SET fkUser=? WHERE idNomenclature=?";
+                await connection.query(sqlSelect, [newData.toUpperCase()], async(error, resultSQL) => {
+                    if (error) throw (error)
+                    else {
+                        if (resultSQL.length != 0){
+                            for (var j=0; j<resultSQL.length; j++){
+                                todo = resultSQL[j].pkUser;
+                            }
+                            await connection.query(sqlUpdate, [todo, myID], (error, resultSQL) => {
+                                if (error) throw error;
+                                else {
+                                    console.log("MAJ nomenclature et user");
+                                }
+                            })
+                        } else {
+                            console.log("pkUser invalide");
+                        }
                     }
-                });
+                })
             break;
             default:
                 console.log("défaut switch modif nomenclature->user");
@@ -292,17 +338,15 @@ exports.nomenclatureModification = async function(request, response){
         switch(myColumn){
             case "idBonCommande":
                 const sqlSelect = "SELECT idBonCommande FROM boncommande WHERE idBonCommande=?";
-                const select_query = connection.query(sqlSelect, [newData]);
                 const sqlUpdate = "UPDATE nomenclature SET fkBonCommande=? WHERE idNomenclature=?";
-                await connection.query(select_query, async(error, resultSQL) => {
+                await connection.query(sqlSelect, [newData], async(error, resultSQL) => {
                     if (error) throw (error)
                     else {
                         if (resultSQL.length != 0){
                             for (var j=0; j<resultSQL.length; j++){
                                 todo = resultSQL[j].idBonCommande;
                             }
-                            const update_query = connection.query(sqlUpdate, [todo, myID]);
-                            await connection.query(update_query, (error, resultSQL) => {
+                            await connection.query(sqlUpdate, [todo, myID], (error, resultSQL) => {
                                 if (error) throw error;
                                 else {
                                     console.log("MAJ nomenclature et boncommande");
@@ -342,6 +386,7 @@ exports.modifAllNomenclature = function(request, response){
     let remise = request.body.remise;
     let effectue = request.body.effectue;
     let fournisseur = request.body.fournisseur;
+    let idProjet = request.body.idProjet;
     for (var i=0; i<nomenclatureList.length; i++){
         //changement local de la liste des projets
         for (var j=0; j<idNomenclatures.length; j++){
@@ -351,13 +396,14 @@ exports.modifAllNomenclature = function(request, response){
                 nomenclatureList[i].remise = remise;
                 nomenclatureList[i].effectue = effectue;
                 nomenclatureList[i].fournisseur = fournisseur;
+                nomenclatureList[i].idProjet = idProjet;
             }
         }
     } 
     if (rev.length<45 && matiere.length<45 && remise.length<45 && effectue.length<45){
         //update bdd + verif suppl longueur
-        const sqlUpdate = "UPDATE nomenclature SET rev=?, matiere=?, remise=?, effectue=?, fournisseur=? WHERE idNomenclature IN (?)";
-        let todo = [rev, matiere, remise, effectue, fournisseur, [idNomenclatures]];
+        const sqlUpdate = "UPDATE nomenclature SET rev=?, matiere=?, remise=?, effectue=?, fournisseur=?, idProjet=? WHERE idNomenclature IN (?)";
+        let todo = [rev, matiere, remise, effectue, fournisseur, idProjet, [idNomenclatures]];
         connection.query(sqlUpdate, todo, function(err, result){
             if (err) throw err;
             console.log("ajout bdd");
@@ -372,23 +418,25 @@ exports.majPrixTotal = async function(request, response){
     //mise a jour colonne prix total client
     let idNomenclatureList = [];
     let pkNomenclatureList = [];
+    let dataFormat = true;
     for (var i=0; i<nomenclatureList.length; i++){
         idNomenclatureList.push(nomenclatureList[i].idNomenclature);
     }
-    const sqlSelect = "SELECT pkNomenclature FROM nomenclature WHERE idNomenclature IN (?)";
-    const select_query = connection.query(sqlSelect, [[idNomenclatureList]]);
+    const sqlSelect = "SELECT pkNomenclature, prixUnitClient, qte FROM nomenclature WHERE idNomenclature IN (?)";
     if (idNomenclatureList.length!=null) {
-        await connection.query (select_query, async (error, resultSQL) => {
+        await connection.query (sqlSelect, [[idNomenclatureList]], async (error, resultSQL) => {
             if (error){
                 console.log(error);
             } else{
                 for (var j=0; j<resultSQL.length; j++){
                     pkNomenclatureList.push(resultSQL[j].pkNomenclature);
+                    if (resultSQL[j].prixUnitClient==null || resultSQL[j].qte==null){
+                        dataFormat=false;
+                    }
                 }
-                if (resultSQL.length==pkNomenclatureList.length){
+                if (resultSQL.length==pkNomenclatureList.length && dataFormat){
                     const sqlUpdate = "UPDATE nomenclature, fournisseur SET nomenclature.prixTotalClient= nomenclature.qte*nomenclature.prixUnitClient*(1-(nomenclature.remise)/100)*(1+ fournisseur.tauxTVA) WHERE nomenclature.fkFournisseur=fournisseur.pkFournisseur AND pkNomenclature IN (?)";
-                    const update_query= connection.query(sqlUpdate, [[pkNomenclatureList]]);
-                    await connection.query(update_query, (error, resultSQL) =>{
+                    await connection.query(sqlUpdate, [[pkNomenclatureList]], (error, resultSQL) =>{
                         if (error) {
                             console.log(error);
                         }
@@ -434,15 +482,13 @@ exports.ajoutNomenclature = function(req, res){
 exports.getNomenclature = async function(req,res){
     nomenclatureList.length = 0;
     const sqlProcedure = "call maj_fk_nomenclature()";
-    const procedure_query = connection.query(sqlProcedure);
     const sqlSelect = "SELECT * FROM nomenclature_view";
-    const select_query = connection.query(sqlSelect);
     return new Promise((resolve, reject) => {
-        connection.query(procedure_query, async (error0, resultSQL0) => {
+        connection.query(sqlProcedure, async (error0, resultSQL0) => {
             if (error0){
                 console.log(error0);
             } else {
-                await connection.query(select_query, (error, resultSQL) => {
+                await connection.query(sqlSelect, (error, resultSQL) => {
                     if (error){
                         console.log(error);
                     } else {
@@ -461,116 +507,200 @@ exports.getNomenclature = async function(req,res){
     })
 }
 
-// upload csv to database
-exports.upload = function(req, res) {
-    let par = req.session.user;
+exports.upload = async function(req, res) {
     let fkUser;
-    const sqlSelect = "SELECT pkUser FROM user WHERE pseudo=?;";
-    const select_query = connection.query(sqlSelect, [par]);
+    let fdata;
+    let par = req.session.user;
+    uncleanListUpload.length = 0;
+    nomenclatureListUpload.length = 0;
+    idNomenclatureSet.clear();
     //Determine fkUser
     if (par==null || par==undefined){
         fkUser = 1; //NUMERO SI PAS CONNECTE
-        UploadCsvDataToMySQL(__dirname + '/uploads/' + req.file.filename, fkUser);
+        fdata = await UploadCsvDataToMySQL(__dirname + '/uploads/' + req.file.filename, fkUser);
     } else{
-        get_fkUser = function(){
-            //Eviter js callback hell
-            return new Promise(function(resolve, reject){
-                connection.query(select_query, (error, resultSQL) => {
+        fkUser = await get_fkUser(par);
+        fdata = await UploadCsvDataToMySQL(__dirname + '/uploads/' + req.file.filename, fkUser);
+    }
+    if (fdata[0]==true) {
+        let stringVal = fdata[2];
+        let csvData = fdata[1];
+        let query = 'INSERT INTO nomenclature(idPiece, denomination, qte, fournisseur, matiere, brut, realisation, finition, refFournisseur, idProjet, idNomenclature, prixUnitClient, fkUser) VALUES '+ stringVal +' ON DUPLICATE KEY UPDATE idNomenclature=idNomenclature';
+        connection.query(query, csvData, async(error, response) => {
+            if (error){
+                console.log(error);
+            }
+            else{
+                console.log('CSV file data has been uploaded in mysql database');
+                await connection.query("call nomenclature_fournisseur_upload();", (error, response) => {
                     if (error) throw error;
-                    else if (resultSQL.length!=0) {
-                        resolve(resultSQL[0].pkUser);
-                    } else {
-                        reject(new Error("No result"));
+                    else {
+                        console.log('MAJ lien fournisseur-nomenclature');
                     }
                 })
-            })
-        }
-        get_fkUser()
-        .then(function(result){
-            fkUser = result;
-            UploadCsvDataToMySQL(__dirname + '/uploads/' + req.file.filename, fkUser);
-        })
-        .catch(function(error){
-            console.log("Promise rejection error: " + error);
-        })
+            }
+        });
+        res.redirect('/nomenclature');
+    } else {
+        res.render('erreurNomenclature.ejs', {uncleanListUpload: fdata[3]});
     }
-    res.redirect('/nomenclature');
+}
+
+function get_fkUser(par){
+    //Eviter js callback hell
+    return new Promise(function(resolve, reject){
+        const sqlSelect = "SELECT pkUser FROM user WHERE pseudo=?;";
+        connection.query(sqlSelect, [par], (error, resultSQL) => {
+            if (error) throw error;
+            else if (resultSQL.length!=0) {
+                resolve(resultSQL[0].pkUser);
+            } else {
+                reject(new Error("No result"));
+            }
+        })
+    })
 }
 
 function UploadCsvDataToMySQL(filePath, fkUser){
+    let fichierClean = true;
     if (filePath.charCodeAt(0) === 0xFEFF) {
         //Fichier excell en UTF8-BOM et non pas UTF8, ce if strip le BOM qui génere caractère défectueux
         filePath = stream.substr(filePath);
     }
-    let stream = fs.createReadStream(filePath);
-    let csvData = [];
-    let csvStream = csv
-    .parse()
-    .on('error', () => {
-        console.log("Fichier csv illisible");
-    })
-    .on("data", (row) => {
-        let dataGoodFormat = true;
-        if (row.length<13){
-            for (var i=0; i<row.length; i++){
-                if (row[i].length<70){                   
-                    //console.log("data bonne taille");
-                    //VARCHAR(70) pour row[2] le reste est varchar(45) enftt
-                } else {
-                    console.log("Element de colonne dépasse les 70 caractères authorisé");
-                    csvData.length = 0;
-                    dataGoodFormat = false;
-                    break;
+    return new Promise((resolve, reject) => {
+        let stream = fs.createReadStream(filePath);
+        let csvData = [];
+        let csvStream = csv
+        .parse()
+        .on('error', () => {
+            console.log("Fichier csv illisible");
+            reject(error);
+        })
+        .on("data", (row) => {
+            let dataGoodFormat = true;
+            if (row.length<13){
+                for (var i=0; i<row.length; i++){
+                    if (row[i].length<70){                   
+                        //console.log("data bonne taille");
+                        //VARCHAR(70) pour row[2] le reste est varchar(45) enftt
+                    } else {
+                        console.log("Element de colonne dépasse les 70 caractères authorisé");
+                        csvData.length = 0;
+                        dataGoodFormat = false;
+                        break;
+                    }
                 }
+                if (dataGoodFormat){ 
+                    while (row.length<12){
+                        //Fichier qui n'ont pas toutes les colonnes (prixUnitaire pas toujours)
+                        row.push('');
+                    }
+                    row.push(fkUser);
+                    csvData.push(row);
+                }
+            } else {
+                console.log("Erreur pas les bonnes dimensions colonnes mysql")
             }
-            if (dataGoodFormat){ 
-                while (row.length<12){
-                    //Fichier qui n'ont pas toutes les colonnes (prixUnitaire pas toujours)
-                    row.push('');
+        })
+        .on("end", function () {
+            // Remove Header ROW
+            csvData.shift();
+            if (csvData.length>0){
+                let stringVal = '';
+                for (var i=0; i<csvData.length; i++){
+                    nomenclatureListUpload.push([csvData[i][0], csvData[i][1], csvData[i][2], csvData[i][3],csvData[i][4],csvData[i][5],csvData[i][6],csvData[i][7],csvData[i][8],csvData[i][9],csvData[i][10],csvData[i][11],csvData[i][12]]);
+                    if (idNomenclatureSet.has(csvData[i][10]) || csvData[i][10]==''){
+                        fichierClean = false;
+                        uncleanListUpload.push([csvData[i][10], csvData[i][8], csvData[i][9]]);
+                    } else{
+                        idNomenclatureSet.add(csvData[i][10]);
+                    }
+                    if (i==(csvData.length-1)){
+                        stringVal += '(?)';
+                        break;
+                    }
+                    stringVal += '(?),';
                 }
-                row.push(fkUser);
-                csvData.push(row);
-            }
-        } else {
-            console.log("Erreur pas les bonnes dimensions colonnes mysql")
-        }
-    })
-    .on("end", function () {
-        // Remove Header ROW
-        csvData.shift();
-        if (csvData.length>0){
-            let stringVal = '';
-            for (var i=1;i<csvData.length;i++){
-                stringVal += '(?),';
-                if (csvData[i][10]=='') {
-                    date = new Date();
-                    csvData[i][10]= csvData[i][9] + '-' + i + date.getHours() + date.getMonth() + date.getFullYear();
-                } 
-                if (i==(csvData.length-1)){
-                    stringVal += '(?)';
-                    break;
-                }
-            }
-            let query = 'INSERT INTO nomenclature(idPiece, denomination, qte, fournisseur, matiere, brut, realisation, finition, refFournisseur, idProjet, idNomenclature, prixUnitClient, fkUser) VALUES '+ stringVal +' ON DUPLICATE KEY UPDATE idNomenclature=idNomenclature';
-            connection.query(query, csvData, async(error, response) => {
-                if (error){
-                    console.log(error);
-                }
-                else{
-                    console.log('CSV file data has been uploaded in mysql database');
-                    await connection.query("call nomenclature_fournisseur_upload();", (error, response) => {
-                        if (error) throw error;
-                        else {
-                            console.log('MAJ lien fournisseur-nomenclature');
+                for (var j=0; j<nomenclatureList.length; j++){
+                    for (var k=0; k<nomenclatureListUpload.length; k++){
+                        if(nomenclatureList[j].idNomenclature==nomenclatureListUpload[k][10]){
+                            fichierClean = false;
+                            uncleanListUpload.push([nomenclatureListUpload[k][10],nomenclatureListUpload[k][8], nomenclatureListUpload[k][9]])
                         }
-                    })
+                    }
                 }
-            });
-        } else {
-            console.log("Donnée dans le mauvais format");
-        }
-        // On delete apres avoir enregistrer le fichier
-        fs.unlinkSync(filePath)
-    }); 
-    stream.pipe(csvStream);
+                
+                let fdata = [fichierClean, csvData, stringVal, uncleanListUpload];
+                resolve(fdata);
+            } else {
+                console.log("Donnée dans le mauvais format");
+            }
+            // On delete apres avoir enregistrer le fichier
+            fs.unlinkSync(filePath)
+        }); 
+        stream.pipe(csvStream);
+    })
 }   
+
+exports.uploadSpecial = async function(req, res) {
+    let fkUser;
+    let fdata;
+    let par = req.session.user;
+    uncleanListUpload.length = 0;
+    nomenclatureListUpload.length = 0;
+    idNomenclatureSet.clear();
+    //Determine fkUser
+    if (par==null || par==undefined){
+        fkUser = 1; //NUMERO SI PAS CONNECTE
+        fdata = await UploadCsvDataToMySQL(__dirname + '/uploads/' + req.file.filename, fkUser);
+    } else{
+        fkUser = await get_fkUser(par);
+        fdata = await UploadCsvDataToMySQL(__dirname + '/uploads/' + req.file.filename, fkUser);    
+    }
+    idProjet = fdata[3][0][2];
+    fdata = await get_idNomenclature(idProjet, fdata);
+    let stringVal = fdata[2];
+    let csvData = fdata[1];
+    let query = 'INSERT INTO nomenclature(idPiece, denomination, qte, fournisseur, matiere, brut, realisation, finition, refFournisseur, idProjet, idNomenclature, prixUnitClient, fkUser) VALUES '+ stringVal +' ON DUPLICATE KEY UPDATE idNomenclature=idNomenclature';
+    connection.query(query, csvData, async(error, response) => {
+        if (error){
+            console.log(error);
+        }
+        else{
+            console.log('CSV file data has been uploaded in mysql database');
+            await connection.query("call nomenclature_fournisseur_upload();", (error, response) => {
+                if (error) throw error;
+                else {
+                    console.log('MAJ lien fournisseur-nomenclature');
+                }
+            })
+        }
+    });
+    res.redirect('/nomenclature');
+
+}
+
+function get_idNomenclature(idProjet, fdata){
+    //Eviter js callback hell
+    let pkNomenclature;
+    return new Promise(function(resolve, reject){
+        const sqlSelect = "SELECT max(pkNomenclature) as pkNomenclature FROM nomenclature WHERE idProjet=? ;";
+        connection.query(sqlSelect, [idProjet], (error, resultSQL) => {
+            if (error) throw error;
+            else if (resultSQL.length!=0) {
+                if (resultSQL[0].pkNomenclature==null){
+                    pkNomenclature = 0;
+                } else {
+                    pkNomenclature = resultSQL[0].pkNomenclature;
+                }
+                for (var i=0; i<fdata[3].length; i++){
+                    fdata[1][i][10]=idProjet +'_'+ "100 00 "+ pkNomenclature +" "+ i;
+                }
+                console.log(fdata[1])
+                resolve(fdata);
+            } else {
+                reject(new Error("No result"));
+            }
+        })
+    })
+}

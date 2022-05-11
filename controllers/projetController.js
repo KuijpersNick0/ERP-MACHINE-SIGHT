@@ -72,9 +72,7 @@ exports.deleteProjet = async function(req, res){
         }
     }
     const sqlDelete = "DELETE FROM projet WHERE idProjet = ?";
-    const delete_query = connection.query(sqlDelete, [idProjet]);
-    const sqlInsert = "INSERT INTO projet_delete (pkProjet, idProjet, nom, description, prixTotalNomenclature, prixTotalBonCommande, natureProjet) VALUES (?,?,?,?,?,?,?)"
-    const insert_query = connection.query(sqlInsert, dataDelete);
+    const sqlInsert = "INSERT INTO projet_delete (pkProjet, idProjet, nom, description, prixTotalNomenclature, prixTotalBonCommande, natureProjet) VALUES (?,?,?,?,?,?,?)";
     for (var i=0; i<projetList.length; i++){
         if (idProjet==projetList[i].idProjet){
             projetList.splice(i,1);
@@ -82,12 +80,12 @@ exports.deleteProjet = async function(req, res){
             break;
         }
     }
-    await connection.query (delete_query, async (error, resultSQL) => {
+    await connection.query (sqlDelete, [idProjet], async (error, resultSQL) => {
         if (error){
             console.log(error);
         }else{
             console.log("Effacé bdd");
-            await connection.query(insert_query, (error, resultSQL) =>{
+            await connection.query(sqlInsert, dataDelete, (error, resultSQL) =>{
                 if (error) {
                     console.log(error);
                 }
@@ -162,15 +160,13 @@ exports.modifAllProjet = function(request, response){
 exports.majPrixTotal = async function(request, response){
     //mise a jour colonne prix total
     const sqlUpdateNomenclature = "UPDATE projet JOIN nomenclature ON projet.pkProjet = nomenclature.fkProjet  SET projet.prixTotalNomenclature = (SELECT SUM(prixTotalClient) FROM nomenclature WHERE nomenclature.fkProjet=projet.pkProjet) WHERE pkProjet = fkProjet;";
-    const updateNomenclature_query = connection.query(sqlUpdateNomenclature);
     const sqlUpdateBonCommande = "UPDATE projet JOIN boncommande ON projet.pkProjet = boncommande.fkProjet0  SET projet.prixTotalBonCommande = (SELECT SUM(prixTotal) FROM boncommande WHERE boncommande.fkProjet0=projet.pkProjet) WHERE pkProjet = fkProjet0;";
-    const updateBonCommande_query = connection.query(sqlUpdateBonCommande);
     
-    await connection.query(updateNomenclature_query, async (error, resultSQL) => {
+    await connection.query(sqlUpdateNomenclature, async (error, resultSQL) => {
         if (error){
             console.log(error);
         } else {
-            await connection.query(updateBonCommande_query, async (error, resultSQL1) => {
+            await connection.query(sqlUpdateBonCommande, async (error, resultSQL1) => {
                 if (error) {
                     console.log(error)
                 } else {                      

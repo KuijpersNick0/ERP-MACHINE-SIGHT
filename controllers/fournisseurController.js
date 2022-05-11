@@ -46,9 +46,7 @@ exports.deleteFournisseur = async function(req, res){
         }
     }
     const sqlDelete = "DELETE FROM fournisseur WHERE idFournisseur = ?";
-    const delete_query = connection.query(sqlDelete, [idFournisseur]);
     const sqlInsert = "INSERT INTO fournisseur_delete VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-    const insert_query = connection.query(sqlInsert, dataDelete);
     for (var i=0; i<fournisseurList0.length; i++){
         if (idFournisseur==fournisseurList0[i].idFournisseur){
             fournisseurList0.splice(i,1);
@@ -56,12 +54,12 @@ exports.deleteFournisseur = async function(req, res){
             break;
         }
     }
-    await connection.query (delete_query, async (error, resultSQL) => {
+    await connection.query (sqlDelete, [idFournisseur], async (error, resultSQL) => {
         if (error){
             console.log(error);
         }else{
             console.log("Effacé bdd");
-            await connection.query(insert_query, (error, resultSQL) =>{
+            await connection.query(sqlInsert, dataDelete, (error, resultSQL) =>{
                 if (error) {
                     console.log(error);
                 }
