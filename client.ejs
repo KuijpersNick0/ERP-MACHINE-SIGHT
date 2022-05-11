@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css"/>
+    <title>ERP Machine Sight</title>
+</head>
+<body>
+    <span id="menu" onclick="openNav()"> Menu </span>
+    <h1> ERP </h1>
+    <h2> Liste des clients </h2>
+    
+    <div id="alert"></div>
+
+    <div id="mySidenav" class="sidenav">
+      <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+      <a class ="bouton" href="/fournisseur">Liste fournisseurs</a>
+      <a class ="bouton" href="/bonCommande">Liste bons commande</a>
+      <a class ="bouton" href="/nomenclature">Liste nomenclatures</a>
+      <a class ="bouton" href="/projet">Liste projets</a>
+      <a class ="bouton" href="/connection">Connection</a>
+    </div>
+        
+    <label for="selectionRecherche">Choose search column </label>
+    <select name="selectionRecherche" id="selectionRecherche">
+        <label>Choissir colonne de recherche</label>
+        <option value="0">id Client</option>
+        <option value="1">Nom Prenom</option>
+        <option value="2">tel</option>
+        <option value="3">email</option>
+        <option value="4">adresse1</option>
+    </select>
+    <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for..">
+    <table id="myTable">
+            <tr class="header">
+                <th>id Client</th>
+                <th>Nom Prenom</th>
+                <th>tel</th>
+                <th>email</th>
+                <th>adresse 1</th>
+            </tr>
+            <% for (var i=0; i<client.length; i++){ %>
+            <tr>
+                  <td id="id<%=i%>" name="pkClient" class="pkClient">
+                      <%=client[i].pkProjet%> 
+                  </td>
+                  <td contenteditable='true' id="<%=i%>" class="nomPrenom" >
+                      <%=client[i].nomPrenom%> 
+                  </td>
+                  <td contenteditable='true' id="<%=i%>" class="tel">
+                      <%=client[i].tel%> 
+                  </td>
+                  <td contenteditable="true" id="<%=i%>" class="email">
+                      <%=client[i].email%>
+                  </td>
+                  <td contenteditable="true" id="<%=i%>" class="adresse1">
+                    <%=client[i].adresse1%>
+                </td>
+            </tr>
+            <% } %> 
+    </table>
+
+    <script>
+        /* pour menu nav*/
+        function openNav() {
+        document.getElementById("mySidenav").style.width = "250px";
+        document.getElementById("main").style.marginLeft = "250px";
+        document.body.style.backgroundColor = "rgba(0,0,0,0.4)";
+        }
+        function closeNav() {
+        document.getElementById("mySidenav").style.width = "0";
+        document.getElementById("main").style.marginLeft = "0";
+        document.body.style.backgroundColor = "white";
+        }
+
+        function myFunction() {
+            //Declare variables
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById("myInput");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("myTable");
+            tr = table.getElementsByTagName("tr");
+            a = document.getElementById("selectionRecherche").value;
+            //Loop td
+            for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[a];
+            if (td) {
+                txtValue = td.textContent || td.innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+                } else {
+                tr[i].style.display = "none";
+                }
+            }
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css"/>
+    <title>Page Perso Projet</title>
+</head>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+<body>
+    <h1> Page projet </h1>
+    <a class ="bouton" href="/projet">Retourner à liste projets</a>
+    <p> <label style="font-weight:bold;"> Nom projet: </label> <%=monProjet.nom %> </p>
+    <p> <label style="font-weight:bold;"> Description: </label> <%=monProjet.description %> </p>
+    <p> <label style="font-weight:bold;"> Nature projet: </label> <%=monProjet.natureProjet %> </p>
+
+    <h3>Liste bon de commandes : </h3>
+    <table id="myTable">
+        <tr class="header">
+            <th>Fournisseur</th>
+            <th>Articles</th>
+            <th>Denomination</th>
+        </tr>
+        <% for (const [key, value] of Object.entries(dictTable)) {for (var i=0; i<value.length; i++){ %>
+            <tbody>
+                <tr>
+                    <td>
+                        <%=key%> 
+                    </td>                
+                    <td>
+                        <%=value[i][0]%> 
+                    </td>
+                    <td>
+                        <%=value[i][1]%> 
+                    </td>
+                </tr>
+            </tbody>
+        <% } } %> 
+    </table>
+    <script>
+        window.onload = function(){
+            var seen = {};
+            $('#myTable td:first-child').each(function() {
+                // Encode column and content information.
+                var key = $(this).text();
+                if (seen[key]) {
+                    $(this).text('');
+                }
+                else {
+                    seen[key] = true;
+                }
+            });
+        }
+    </script>
+</body>
+</html>
