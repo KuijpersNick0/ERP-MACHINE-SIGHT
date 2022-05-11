@@ -35,6 +35,7 @@ router.use(session({
 
 //gere le stockage local pour upload nomenclature
 router.use(express.json({limit :'1mb'}));
+
 var storage = multer.diskStorage({
     destination: function(req, file, cb){
         cb(null, './controllers/uploads');
@@ -97,5 +98,6 @@ router.get('/client', clientController.clientList);
 router.get('/pagePerso/projet/:index', pagePersoController.projetPage);
 
 router.post('/upload', upload.single("fileUpload"), nomenclatureController.upload);
+router.post('/upload/special', upload.single("fileUpload"), nomenclatureController.uploadSpecial);
 
 module.exports = router;
