@@ -1,16 +1,11 @@
 const { response } = require('express');
 let Nomenclature = require('../models/nomenclatureModel');
 let connection = require('../db');
-const { cp } = require('fs');
-const res = require('express/lib/response');
 let fournisseurController0 = require('../controllers/fournisseurController');
 let userController0 = require('../controllers/userController');
 let projetController0 = require('../controllers/projetController');
-const { parseString } = require('fast-csv');
 var fs = require('fs');
 const csv = require('fast-csv');
-const { Console } = require('console');
-const { resolve } = require('path');
 
 let nomenclatureList = [];
 let nomenclatureListPDF = [];
@@ -567,6 +562,13 @@ function UploadCsvDataToMySQL(filePath, fkUser){
         //Fichier excell en UTF8-BOM et non pas UTF8, ce if strip le BOM qui génere caractère défectueux
         filePath = stream.substr(filePath);
     }
+
+    //Encodage de solidwork en ANSI, caractère chelou => je fait un changement en UTF8
+    //Hardcode ascii car librairie permettant détectage ont trop de dépendances ou indisponible x64
+    var file = fs.readFileSync(filePath, {encoding:'ascii'});
+    fs.writeFileSync(filePath, file, 'UTF-8');
+    
+    //Debut lecture fichier
     return new Promise((resolve, reject) => {
         let stream = fs.createReadStream(filePath);
         let csvData = [];
@@ -610,12 +612,14 @@ function UploadCsvDataToMySQL(filePath, fkUser){
                 for (var i=0; i<csvData.length; i++){
                     nomenclatureListUpload.push([csvData[i][0], csvData[i][1], csvData[i][2], csvData[i][3],csvData[i][4],csvData[i][5],csvData[i][6],csvData[i][7],csvData[i][8],csvData[i][9],csvData[i][10],csvData[i][11],csvData[i][12]]);
                     if (idNomenclatureSet.has(csvData[i][10]) || csvData[i][10]==''){
+                        //idNomenclature existe deja ou est null
                         fichierClean = false;
                         uncleanListUpload.push([csvData[i][10], csvData[i][8], csvData[i][9]]);
                     } else{
                         idNomenclatureSet.add(csvData[i][10]);
                     }
                     if (i==(csvData.length-1)){
+                        //Pour insert mariadb demande plusieurs (?) par element d'insert
                         stringVal += '(?)';
                         break;
                     }
