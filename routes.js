@@ -4,9 +4,6 @@ var path = require('path');
 var cors = require('cors');
 var bodyParser = require('body-parser');
 var multer = require('multer');
-let connection = require('../ERP_Code/db');
-var fs = require('fs');
-const csv = require('fast-csv');
 
 //Enable CORS
 router.use(cors());
